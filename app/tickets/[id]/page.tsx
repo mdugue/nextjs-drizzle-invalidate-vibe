@@ -7,9 +7,9 @@ import {
   getTicketDetail,
 } from "@/lib/queries";
 
-interface TicketDetailPageProps {
+type TicketDetailPageProps = {
   params: Promise<{ id: string }>;
-}
+};
 
 export default async function TicketDetailPage({
   params,

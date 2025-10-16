@@ -2,9 +2,9 @@ import { MemberList } from "@/app/members/components/MemberList";
 import { parsePaginationParams } from "@/lib/pagination";
 import { getMemberList } from "@/lib/queries";
 
-interface MembersPageProps {
+type MembersPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
+};
 
 export default async function MembersPage({ searchParams }: MembersPageProps) {
   const params = await searchParams;
@@ -12,7 +12,9 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const sortParam = typeof params.sort === "string" ? params.sort : "createdAt";
   const urlParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (typeof value === "string") urlParams.set(key, value);
+    if (typeof value === "string") {
+      urlParams.set(key, value);
+    }
   });
   const pagination = parsePaginationParams(urlParams);
   const data = await getMemberList({

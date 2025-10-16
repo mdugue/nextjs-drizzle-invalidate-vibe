@@ -31,23 +31,29 @@ const useFormItemContext = () => {
   return context;
 };
 
-const FormItem = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+const FormItem = ({
+  className,
+  ref,
+  ...props
+}: React.HTMLAttributes<HTMLDivElement> & {
+  ref?: React.RefObject<HTMLDivElement | null>;
+}) => {
   const id = React.useId();
   return (
     <FormItemContext.Provider value={{ id }}>
       <div className={cn("space-y-2", className)} ref={ref} {...props} />
     </FormItemContext.Provider>
   );
-});
+};
 FormItem.displayName = "FormItem";
 
-const FormLabel = React.forwardRef<
-  React.ElementRef<typeof LabelPrimitive.Root>,
-  React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root>
->(({ className, ...props }, ref) => {
+const FormLabel = ({
+  className,
+  ref,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof LabelPrimitive.Root> & {
+  ref?: React.RefObject<React.ElementRef<typeof LabelPrimitive.Root> | null>;
+}) => {
   const { id } = useFormItemContext();
   return (
     <LabelPrimitive.Root
@@ -57,16 +63,18 @@ const FormLabel = React.forwardRef<
       {...props}
     />
   );
-});
+};
 FormLabel.displayName = "FormLabel";
 
-const FormControl = React.forwardRef<
-  React.ElementRef<typeof Slot>,
-  React.ComponentPropsWithoutRef<typeof Slot>
->(({ ...props }, ref) => {
+const FormControl = ({
+  ref,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof Slot> & {
+  ref?: React.RefObject<React.ElementRef<typeof Slot> | null>;
+}) => {
   const { id } = useFormItemContext();
   return <Slot id={id} ref={ref} {...props} />;
-});
+};
 FormControl.displayName = "FormControl";
 
 const FormMessage = ({
@@ -76,7 +84,9 @@ const FormMessage = ({
   const { id } = useFormItemContext();
   const form = useFormContext();
   const fieldState = form.getFieldState(id as never, form.formState);
-  if (!(children || fieldState.error)) return null;
+  if (!(children || fieldState.error)) {
+    return null;
+  }
   return (
     <p
       className={cn("font-medium text-destructive text-sm", className)}

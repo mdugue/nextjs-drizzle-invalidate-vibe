@@ -39,12 +39,12 @@ import {
 import { type Member, memberStatus } from "@/lib/schema";
 import { type MemberFormValues, memberFormSchema } from "@/lib/zod";
 
-interface MemberDialogProps {
+type MemberDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   member?: Member | null;
   onDeleted?: (id: number) => void;
-}
+};
 
 export function MemberDialog({
   open,
@@ -114,7 +114,9 @@ export function MemberDialog({
   };
 
   const onDelete = () => {
-    if (!member) return;
+    if (!member) {
+      return;
+    }
     startTransition(async () => {
       try {
         await deleteMember(member.id);

@@ -10,9 +10,7 @@ export default function TicketDetailError({
   error: Error;
   reset: () => void;
 }) {
-  useEffect(() => {
-    console.error(error);
-  }, [error]);
+  useEffect(() => {}, []);
 
   return (
     <div className="mx-auto flex w-full max-w-2xl flex-col items-center gap-4 py-12 text-center">

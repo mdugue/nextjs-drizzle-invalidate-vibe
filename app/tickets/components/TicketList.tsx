@@ -36,30 +36,37 @@ import {
   ticketFormSchema,
 } from "@/lib/zod";
 
-interface Option {
+type Option = {
   id: number;
   label: string;
-}
+};
 
-interface TicketListProps {
+type TicketListProps = {
   tickets: Ticket[];
   pageInfo: CursorPaginationResult<Ticket, string>["pageInfo"];
   search?: string;
   sort?: string;
   projectOptions: Option[];
   memberOptions: Option[];
-}
+};
 
 function buildQuery(
   base: { search?: string; sort?: string },
   overrides: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
-  if (base.search) params.set("search", base.search);
-  if (base.sort) params.set("sort", base.sort);
+  if (base.search) {
+    params.set("search", base.search);
+  }
+  if (base.sort) {
+    params.set("sort", base.sort);
+  }
   Object.entries(overrides).forEach(([key, value]) => {
-    if (value) params.set(key, value);
-    else params.delete(key);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
   });
   const query = params.toString();
   return query ? `?${query}` : "";

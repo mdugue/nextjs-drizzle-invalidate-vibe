@@ -31,16 +31,16 @@ import {
   ticketFormSchema,
 } from "@/lib/zod";
 
-interface Option {
+type Option = {
   id: number;
   label: string;
-}
+};
 
-interface TicketDetailFormProps {
+type TicketDetailFormProps = {
   ticket: Ticket;
   projectOptions: Option[];
   memberOptions: Option[];
-}
+};
 
 export function TicketDetailForm({
   ticket,

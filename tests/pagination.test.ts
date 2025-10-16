@@ -17,7 +17,7 @@ describe("cursorPaginate", () => {
     const remaining = dataset.filter((item) => item.id !== 3);
 
     const { items: secondPage } = await cursorPaginate({
-      cursor: String(firstPage[firstPage.length - 1].id),
+      cursor: String(firstPage.at(-1)?.id),
       limit: 5,
       fetcher: async ({ limit }) => remaining.slice(5, 5 + limit),
       getCursor: (item) => String(item.id),

@@ -1,12 +1,12 @@
 export type PaginationDirection = "forward" | "backward";
 
-export interface CursorPaginationParams<TCursor> {
+export type CursorPaginationParams<TCursor> = {
   cursor?: TCursor;
   direction?: PaginationDirection;
   limit?: number;
-}
+};
 
-export interface CursorPaginationResult<T, TCursor> {
+export type CursorPaginationResult<T, TCursor> = {
   items: T[];
   pageInfo: {
     hasNext: boolean;
@@ -14,13 +14,13 @@ export interface CursorPaginationResult<T, TCursor> {
     nextCursor?: TCursor;
     prevCursor?: TCursor;
   };
-}
+};
 
-export interface CursorPaginationFetcherArgs<TCursor> {
+export type CursorPaginationFetcherArgs<TCursor> = {
   cursor?: TCursor;
   direction: PaginationDirection;
   limit: number;
-}
+};
 
 export async function cursorPaginate<T, TCursor>(params: {
   cursor?: TCursor;
@@ -49,8 +49,7 @@ export async function cursorPaginate<T, TCursor>(params: {
         ? hasMore
         : Boolean(params.cursor) || records.length === limit + 1,
     hasPrevious: direction === "backward" ? hasMore : Boolean(params.cursor),
-    nextCursor:
-      items.length > 0 ? getCursor(items[items.length - 1]) : params.cursor,
+    nextCursor: items.length > 0 ? getCursor(items.at(-1)) : params.cursor,
     prevCursor: items.length > 0 ? getCursor(items[0]) : params.cursor,
   } satisfies CursorPaginationResult<T, TCursor>["pageInfo"];
 
@@ -71,7 +70,11 @@ export function paginationToSearchParams({
   direction,
 }: CursorPaginationParams<string>) {
   const params = new URLSearchParams();
-  if (cursor) params.set("cursor", cursor);
-  if (direction && direction !== "forward") params.set("direction", direction);
+  if (cursor) {
+    params.set("cursor", cursor);
+  }
+  if (direction && direction !== "forward") {
+    params.set("direction", direction);
+  }
   return params.toString() ? `?${params.toString()}` : "";
 }

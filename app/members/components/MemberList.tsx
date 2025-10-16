@@ -13,23 +13,30 @@ import { formatDate } from "@/lib/format";
 import type { CursorPaginationResult } from "@/lib/pagination";
 import type { Member } from "@/lib/schema";
 
-interface MemberListProps {
+type MemberListProps = {
   members: Member[];
   pageInfo: CursorPaginationResult<Member, string>["pageInfo"];
   search?: string;
   sort?: string;
-}
+};
 
 function buildQuery(
   base: { search?: string; sort?: string },
   overrides: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
-  if (base.search) params.set("search", base.search);
-  if (base.sort) params.set("sort", base.sort);
+  if (base.search) {
+    params.set("search", base.search);
+  }
+  if (base.sort) {
+    params.set("sort", base.sort);
+  }
   Object.entries(overrides).forEach(([key, value]) => {
-    if (value) params.set(key, value);
-    else params.delete(key);
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
   });
   const query = params.toString();
   return query ? `?${query}` : "";

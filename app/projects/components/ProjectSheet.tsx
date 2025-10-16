@@ -39,12 +39,12 @@ import {
 import { type Project, projectStatus } from "@/lib/schema";
 import { type ProjectFormValues, projectFormSchema } from "@/lib/zod";
 
-interface ProjectSheetProps {
+type ProjectSheetProps = {
   project?: Project | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onDeleted?: (id: number) => void;
-}
+};
 
 export function ProjectSheet({
   project,
@@ -111,7 +111,9 @@ export function ProjectSheet({
   };
 
   const onDelete = () => {
-    if (!project) return;
+    if (!project) {
+      return;
+    }
     startTransition(async () => {
       try {
         await deleteProject(project.id);

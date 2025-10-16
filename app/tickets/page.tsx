@@ -6,9 +6,9 @@ import {
   getTicketList,
 } from "@/lib/queries";
 
-interface TicketsPageProps {
+type TicketsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
-}
+};
 
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const params = await searchParams;
@@ -16,7 +16,9 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const sortParam = typeof params.sort === "string" ? params.sort : "createdAt";
   const urlParams = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
-    if (typeof value === "string") urlParams.set(key, value);
+    if (typeof value === "string") {
+      urlParams.set(key, value);
+    }
   });
   const pagination = parsePaginationParams(urlParams);
   const data = await getTicketList({
