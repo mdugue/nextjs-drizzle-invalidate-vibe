@@ -173,7 +173,6 @@ export function TicketDetailForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
                   {projectOptions.map((option) => (
                     <SelectItem key={option.id} value={String(option.id)}>
                       {option.label}
@@ -198,7 +197,6 @@ export function TicketDetailForm({
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="">Unassigned</SelectItem>
                   {memberOptions.map((option) => (
                     <SelectItem key={option.id} value={option.label}>
                       {option.label}
