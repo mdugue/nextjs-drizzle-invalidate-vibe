@@ -18,19 +18,19 @@ function parseFormData<T>(schema: z.ZodSchema<T>, formData: FormData): T {
 
 export async function createProject(formData: FormData) {
   const values = parseFormData(projectFormSchema, formData);
-  await db.insert(projects).values(values).run();
+  await db.insert(projects).values(values);
   revalidateTag(PROJECT_LIST_TAG);
 }
 
 export async function updateProject(id: number, formData: FormData) {
   const values = parseFormData(projectFormSchema, formData);
-  await db.update(projects).set(values).where(eq(projects.id, id)).run();
+  await db.update(projects).set(values).where(eq(projects.id, id));
   revalidateTag(PROJECT_LIST_TAG);
   revalidateTag(PROJECT_DETAIL_TAG(id));
 }
 
 export async function deleteProject(id: number) {
-  await db.delete(projects).where(eq(projects.id, id)).run();
+  await db.delete(projects).where(eq(projects.id, id));
   revalidateTag(PROJECT_LIST_TAG);
   revalidateTag(PROJECT_DETAIL_TAG(id));
 }

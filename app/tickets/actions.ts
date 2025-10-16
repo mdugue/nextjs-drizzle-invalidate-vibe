@@ -18,19 +18,19 @@ function parseFormData<T>(schema: z.ZodSchema<T>, formData: FormData): T {
 
 export async function createTicket(formData: FormData) {
   const values = parseFormData(ticketFormSchema, formData);
-  await db.insert(tickets).values(values).run();
+  await db.insert(tickets).values(values);
   revalidateTag(TICKET_LIST_TAG);
 }
 
 export async function updateTicket(id: number, formData: FormData) {
   const values = parseFormData(ticketFormSchema, formData);
-  await db.update(tickets).set(values).where(eq(tickets.id, id)).run();
+  await db.update(tickets).set(values).where(eq(tickets.id, id));
   revalidateTag(TICKET_LIST_TAG);
   revalidateTag(TICKET_DETAIL_TAG(id));
 }
 
 export async function deleteTicket(id: number) {
-  await db.delete(tickets).where(eq(tickets.id, id)).run();
+  await db.delete(tickets).where(eq(tickets.id, id));
   revalidateTag(TICKET_LIST_TAG);
   revalidateTag(TICKET_DETAIL_TAG(id));
 }

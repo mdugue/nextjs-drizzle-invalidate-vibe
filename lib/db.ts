@@ -1,10 +1,10 @@
 import { mkdirSync } from "node:fs";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { createClient } from "@libsql/client";
+import { drizzle } from "drizzle-orm/libsql";
 
-const dbPath = "./.data/dev.sqlite";
-mkdirSync("./.data", { recursive: true });
+const dataDir = ".data";
+const url = "file:./.data/dev.sqlite";
+mkdirSync(dataDir, { recursive: true });
 
-const sqlite = new Database(dbPath);
-
-export const db = drizzle(sqlite);
+export const client = createClient({ url });
+export const db = drizzle(client);

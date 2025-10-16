@@ -1,6 +1,5 @@
 import { faker } from "@faker-js/faker";
-import Database from "better-sqlite3";
-import { drizzle } from "drizzle-orm/better-sqlite3";
+import { client, db } from "@/lib/db";
 import type { MemberStatus, ProjectStatus, TicketStatus } from "@/lib/schema";
 import {
   memberStatus,
@@ -11,13 +10,10 @@ import {
   tickets,
 } from "@/lib/schema";
 
-const sqlite = new Database("./.data/dev.sqlite");
-const db = drizzle(sqlite);
-
 async function reset() {
-  db.delete(tickets).run();
-  db.delete(projects).run();
-  db.delete(members).run();
+  await db.delete(tickets);
+  await db.delete(projects);
+  await db.delete(members);
 }
 
 function randomEnumValue<T extends readonly string[]>(values: T): T[number] {
@@ -32,7 +28,7 @@ function createSlug(...parts: string[]) {
     .replace(/(^-|-$)+/g, "");
 }
 
-function seedProjects(count = 120) {
+async function seedProjects(count = 120) {
   const data = Array.from({ length: count }, () => {
     const title = faker.company.catchPhrase();
     return {
@@ -43,10 +39,10 @@ function seedProjects(count = 120) {
       owner: faker.person.fullName(),
     };
   });
-  db.insert(projects).values(data).run();
+  await db.insert(projects).values(data);
 }
 
-function seedMembers(count = 120) {
+async function seedMembers(count = 120) {
   const data = Array.from({ length: count }, () => {
     const name = faker.person.fullName();
     const slug = createSlug(name, faker.string.alphanumeric(6));
@@ -59,12 +55,12 @@ function seedMembers(count = 120) {
       role: faker.person.jobTitle(),
     };
   });
-  db.insert(members).values(data).run();
+  await db.insert(members).values(data);
 }
 
-function seedTickets(count = 120) {
-  const projectIds = db.select({ id: projects.id }).from(projects).all();
-  const memberNames = db.select({ name: members.name }).from(members).all();
+async function seedTickets(count = 120) {
+  const projectIds = await db.select({ id: projects.id }).from(projects);
+  const memberNames = await db.select({ name: members.name }).from(members);
   const data = Array.from({ length: count }, () => {
     const title = faker.hacker.phrase();
     const slug = createSlug(title, faker.string.alphanumeric(6));
@@ -81,18 +77,22 @@ function seedTickets(count = 120) {
         : null,
     };
   });
-  db.insert(tickets).values(data).run();
+  await db.insert(tickets).values(data);
 }
 
 async function main() {
   await reset();
-  seedProjects();
-  seedMembers();
-  seedTickets();
+  await seedProjects();
+  await seedMembers();
+  await seedTickets();
   console.log("Seed complete");
 }
 
-main().catch((error) => {
-  console.error(error);
-  process.exit(1);
-});
+main()
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await client.close();
+  });
