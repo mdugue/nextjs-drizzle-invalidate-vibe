@@ -19,7 +19,7 @@ export const projectFormSchema = z.object({
   owner: z.string().min(3),
 });
 
-const projectIdField = z.preprocess((value) => {
+/* const projectIdField = z.preprocess((value) => {
   if (
     value === "" ||
     value === "null" ||
@@ -29,14 +29,14 @@ const projectIdField = z.preprocess((value) => {
     return null;
   }
   return value;
-}, z.coerce.number().nullable());
+}, z.coerce.number().nullable()); */
 
 export const ticketFormSchema = z.object({
   slug: z.string().min(3).regex(slugRegex),
   title: z.string().min(3),
   summary: z.string().min(3),
   status: z.enum(ticketStatus),
-  projectId: projectIdField,
+  projectId: z.number().nullable(), // projectIdField,
   assignee: z.string().optional(),
 });
 

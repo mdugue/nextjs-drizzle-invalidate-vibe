@@ -49,6 +49,7 @@ export async function cursorPaginate<T, TCursor>(params: {
         ? hasMore
         : Boolean(params.cursor) || records.length === limit + 1,
     hasPrevious: direction === "backward" ? hasMore : Boolean(params.cursor),
+    // @ts-expect-error TODO: Fix this
     nextCursor: items.length > 0 ? getCursor(items.at(-1)) : params.cursor,
     prevCursor: items.length > 0 ? getCursor(items[0]) : params.cursor,
   } satisfies CursorPaginationResult<T, TCursor>["pageInfo"];

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type z from "zod";
 import { Button } from "@/app/components/ui/button";
 import {
   Form,
@@ -25,11 +26,7 @@ import {
 import { Textarea } from "@/app/components/ui/textarea";
 import { deleteTicket, updateTicket } from "@/app/tickets/actions";
 import type { Ticket } from "@/lib/schema";
-import {
-  type TicketFormInput,
-  type TicketFormValues,
-  ticketFormSchema,
-} from "@/lib/zod";
+import { type TicketFormValues, ticketFormSchema } from "@/lib/zod";
 
 type Option = {
   id: number;
@@ -48,7 +45,7 @@ export function TicketDetailForm({
   memberOptions,
 }: TicketDetailFormProps) {
   const router = useRouter();
-  const form = useForm<TicketFormInput, undefined, TicketFormValues>({
+  const form = useForm<z.infer<typeof ticketFormSchema>>({
     resolver: zodResolver(ticketFormSchema),
     defaultValues: {
       slug: ticket.slug,

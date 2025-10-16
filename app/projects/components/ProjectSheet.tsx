@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
+import type z from "zod";
 import { Button } from "@/app/components/ui/button";
 import {
   Form,
@@ -53,7 +54,7 @@ export function ProjectSheet({
   onDeleted,
 }: ProjectSheetProps) {
   const router = useRouter();
-  const form = useForm<ProjectFormValues>({
+  const form = useForm<z.infer<typeof projectFormSchema>>({
     resolver: zodResolver(projectFormSchema),
     defaultValues: {
       slug: "",
