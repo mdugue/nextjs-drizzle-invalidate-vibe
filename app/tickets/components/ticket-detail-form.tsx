@@ -1,0 +1,233 @@
+"use client";
+
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { Button } from "@/app/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/app/components/ui/form";
+import { Input } from "@/app/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
+import { Textarea } from "@/app/components/ui/textarea";
+import { deleteTicket, updateTicket } from "@/app/tickets/actions";
+import type { Ticket } from "@/lib/schema";
+import {
+  type TicketFormInput,
+  type TicketFormValues,
+  ticketFormSchema,
+} from "@/lib/zod";
+
+type Option = {
+  id: number;
+  label: string;
+};
+
+type TicketDetailFormProps = {
+  ticket: Ticket;
+  projectOptions: Option[];
+  memberOptions: Option[];
+};
+
+export function TicketDetailForm({
+  ticket,
+  projectOptions,
+  memberOptions,
+}: TicketDetailFormProps) {
+  const router = useRouter();
+  const form = useForm<TicketFormInput, undefined, TicketFormValues>({
+    resolver: zodResolver(ticketFormSchema),
+    defaultValues: {
+      slug: ticket.slug,
+      title: ticket.title,
+      summary: ticket.summary ?? "",
+      status: ticket.status,
+      projectId: ticket.projectId ?? null,
+      assignee: ticket.assignee ?? "",
+    },
+  });
+  const [isPending, startTransition] = useTransition();
+
+  const onSubmit = (values: TicketFormValues) => {
+    const formData = new FormData();
+    for (const [key, value] of Object.entries({
+      ...values,
+      projectId: values.projectId ?? "",
+    })) {
+      formData.append(key, value == null ? "" : String(value));
+    }
+
+    startTransition(async () => {
+      try {
+        await updateTicket(ticket.id, formData);
+        toast.success("Ticket updated");
+        router.refresh();
+      } catch (error) {
+        toast.error((error as Error).message ?? "Failed to update ticket");
+      }
+    });
+  };
+
+  const onDelete = () => {
+    startTransition(async () => {
+      try {
+        await deleteTicket(ticket.id);
+        toast.success("Ticket deleted");
+        router.push("/tickets");
+        router.refresh();
+      } catch (error) {
+        toast.error((error as Error).message ?? "Failed to delete ticket");
+      }
+    });
+  };
+
+  return (
+    <Form {...form}>
+      <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <FormField
+          control={form.control}
+          name="title"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Title</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="slug"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Slug</FormLabel>
+              <FormControl>
+                <Input {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="summary"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Summary</FormLabel>
+              <FormControl>
+                <Textarea {...field} rows={4} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="todo">Todo</SelectItem>
+                  <SelectItem value="in-progress">In progress</SelectItem>
+                  <SelectItem value="blocked">Blocked</SelectItem>
+                  <SelectItem value="done">Done</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="projectId"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Project</FormLabel>
+              <Select
+                onValueChange={(value) =>
+                  field.onChange(value ? Number(value) : null)
+                }
+                value={field.value ? String(field.value) : ""}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select project" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {projectOptions.map((option) => (
+                    <SelectItem key={option.id} value={String(option.id)}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="assignee"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Assignee</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value ?? ""}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select member" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="">Unassigned</SelectItem>
+                  {memberOptions.map((option) => (
+                    <SelectItem key={option.id} value={option.label}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <div className="flex items-center justify-between pt-4">
+          <Button
+            disabled={isPending}
+            onClick={onDelete}
+            type="button"
+            variant="destructive"
+          >
+            Delete
+          </Button>
+          <Button disabled={isPending} type="submit">
+            Save changes
+          </Button>
+        </div>
+      </form>
+    </Form>
+  );
+}
