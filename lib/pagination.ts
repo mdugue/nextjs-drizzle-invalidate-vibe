@@ -60,14 +60,19 @@ export async function cursorPaginate<T, TCursor>(params: {
   return { items, pageInfo };
 }
 
-export function parsePaginationParams(searchParams: URLSearchParams): CursorPaginationParams<string> {
+export function parsePaginationParams(
+  searchParams: URLSearchParams,
+): CursorPaginationParams<string> {
   const cursor = searchParams.get("cursor") ?? undefined;
   const directionParam = searchParams.get("direction");
   const direction = directionParam === "backward" ? "backward" : "forward";
   return { cursor: cursor ?? undefined, direction };
 }
 
-export function paginationToSearchParams({ cursor, direction }: CursorPaginationParams<string>) {
+export function paginationToSearchParams({
+  cursor,
+  direction,
+}: CursorPaginationParams<string>) {
   const params = new URLSearchParams();
   if (cursor) params.set("cursor", cursor);
   if (direction && direction !== "forward") params.set("direction", direction);

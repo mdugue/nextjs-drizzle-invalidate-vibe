@@ -5,10 +5,15 @@ import { Providers } from "@/app/providers";
 
 export const metadata: Metadata = {
   title: "Pulseboard",
-  description: "Client-Server demo with Next.js, Drizzle, and cache invalidation",
+  description:
+    "Client-Server demo with Next.js, Drizzle, and cache invalidation",
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen bg-background font-sans antialiased">

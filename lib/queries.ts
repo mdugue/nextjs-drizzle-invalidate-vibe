@@ -1,24 +1,16 @@
+import type { SQL } from "drizzle-orm";
+import { and, asc, desc, eq, gt, like, lt, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
-import {
-  and,
-  asc,
-  desc,
-  eq,
-  gt,
-  like,
-  lt,
-  or,
-} from "drizzle-orm";
 import { db } from "@/lib/db";
+import { type CursorPaginationParams, cursorPaginate } from "@/lib/pagination";
 import {
-  members,
-  projects,
-  tickets,
   type Member,
+  members,
   type Project,
+  projects,
   type Ticket,
+  tickets,
 } from "@/lib/schema";
-import { cursorPaginate, type CursorPaginationParams } from "@/lib/pagination";
 
 export const PROJECT_LIST_TAG = "projects:list";
 export const PROJECT_DETAIL_TAG = (id: number) => `projects:detail:${id}`;
@@ -35,7 +27,10 @@ function encodeCursor(primary: string | number, secondary: number) {
 
 function decodeCursor(cursor: string) {
   const [primary, secondary] = cursor.split("::");
-  return { primary: decodeURIComponent(primary), secondary: Number.parseInt(secondary ?? "0", 10) };
+  return {
+    primary: decodeURIComponent(primary),
+    secondary: Number.parseInt(secondary ?? "0", 10),
+  };
 }
 
 type ListParams = CursorPaginationParams<string> & {
@@ -44,9 +39,15 @@ type ListParams = CursorPaginationParams<string> & {
 };
 
 const projectFetcher = async (params: ListParams) => {
-  const { cursor, direction = "forward", search, limit = 20, sort = "createdAt" } = params;
+  const {
+    cursor,
+    direction = "forward",
+    search,
+    limit = 20,
+    sort = "createdAt",
+  } = params;
 
-  const where = [] as any[];
+  const where: SQL<unknown>[] = [];
   if (search) {
     const pattern = `%${search.toLowerCase()}%`;
     where.push(
@@ -68,7 +69,10 @@ const projectFetcher = async (params: ListParams) => {
       conditions.push(
         or(
           comparator(projects.createdAt, value),
-          and(eq(projects.createdAt, value), tieComparator(projects.id, secondary)),
+          and(
+            eq(projects.createdAt, value),
+            tieComparator(projects.id, secondary),
+          ),
         ),
       );
     } else {
@@ -128,7 +132,11 @@ export const getProjectList = (params: ListParams) => projectList(params);
 export async function getProjectDetail(id: number) {
   const detail = unstable_cache(
     async () => {
-      const [project] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
+      const [project] = await db
+        .select()
+        .from(projects)
+        .where(eq(projects.id, id))
+        .limit(1);
       return project ?? null;
     },
     ["projects", "detail", String(id)],
@@ -142,9 +150,16 @@ const ticketFetcher = async (
     projectId?: number;
   },
 ) => {
-  const { cursor, direction = "forward", search, limit = 20, sort = "createdAt", projectId } = params;
+  const {
+    cursor,
+    direction = "forward",
+    search,
+    limit = 20,
+    sort = "createdAt",
+    projectId,
+  } = params;
 
-  const where = [] as any[];
+  const where: SQL<unknown>[] = [];
   if (search) {
     const pattern = `%${search.toLowerCase()}%`;
     where.push(
@@ -169,7 +184,10 @@ const ticketFetcher = async (
       conditions.push(
         or(
           comparator(tickets.createdAt, value),
-          and(eq(tickets.createdAt, value), tieComparator(tickets.id, secondary)),
+          and(
+            eq(tickets.createdAt, value),
+            tieComparator(tickets.id, secondary),
+          ),
         ),
       );
     } else {
@@ -208,7 +226,8 @@ const ticketList = unstable_cache(
       cursor: params.cursor,
       direction: params.direction,
       limit: params.limit ?? 20,
-      fetcher: async (fetchParams) => ticketFetcher({ ...params, ...fetchParams }),
+      fetcher: async (fetchParams) =>
+        ticketFetcher({ ...params, ...fetchParams }),
       getCursor: (item) =>
         params.sort === "title"
           ? encodeCursor(item.title ?? "", item.id)
@@ -220,12 +239,17 @@ const ticketList = unstable_cache(
   { tags: [TICKET_LIST_TAG] },
 );
 
-export const getTicketList = (params: ListParams & { projectId?: number }) => ticketList(params);
+export const getTicketList = (params: ListParams & { projectId?: number }) =>
+  ticketList(params);
 
 export async function getTicketDetail(id: number) {
   const detail = unstable_cache(
     async () => {
-      const [ticket] = await db.select().from(tickets).where(eq(tickets.id, id)).limit(1);
+      const [ticket] = await db
+        .select()
+        .from(tickets)
+        .where(eq(tickets.id, id))
+        .limit(1);
       return ticket ?? null;
     },
     ["tickets", "detail", String(id)],
@@ -235,8 +259,14 @@ export async function getTicketDetail(id: number) {
 }
 
 const memberFetcher = async (params: ListParams) => {
-  const { cursor, direction = "forward", search, limit = 20, sort = "createdAt" } = params;
-  const where = [] as any[];
+  const {
+    cursor,
+    direction = "forward",
+    search,
+    limit = 20,
+    sort = "createdAt",
+  } = params;
+  const where: SQL<unknown>[] = [];
   if (search) {
     const pattern = `%${search.toLowerCase()}%`;
     where.push(
@@ -258,7 +288,10 @@ const memberFetcher = async (params: ListParams) => {
       conditions.push(
         or(
           comparator(members.createdAt, value),
-          and(eq(members.createdAt, value), tieComparator(members.id, secondary)),
+          and(
+            eq(members.createdAt, value),
+            tieComparator(members.id, secondary),
+          ),
         ),
       );
     } else {
@@ -297,7 +330,8 @@ const memberList = unstable_cache(
       cursor: params.cursor,
       direction: params.direction,
       limit: params.limit ?? 20,
-      fetcher: async (fetchParams) => memberFetcher({ ...params, ...fetchParams }),
+      fetcher: async (fetchParams) =>
+        memberFetcher({ ...params, ...fetchParams }),
       getCursor: (item) =>
         params.sort === "title"
           ? encodeCursor(item.name ?? "", item.id)
@@ -314,7 +348,11 @@ export const getMemberList = (params: ListParams) => memberList(params);
 export async function getMemberDetail(id: number) {
   const detail = unstable_cache(
     async () => {
-      const [member] = await db.select().from(members).where(eq(members.id, id)).limit(1);
+      const [member] = await db
+        .select()
+        .from(members)
+        .where(eq(members.id, id))
+        .limit(1);
       return member ?? null;
     },
     ["members", "detail", String(id)],
@@ -325,7 +363,10 @@ export async function getMemberDetail(id: number) {
 
 const projectOptionsCache = unstable_cache(
   async () => {
-    return db.select({ id: projects.id, title: projects.title }).from(projects).orderBy(asc(projects.title));
+    return db
+      .select({ id: projects.id, title: projects.title })
+      .from(projects)
+      .orderBy(asc(projects.title));
   },
   ["project-options"],
   { tags: [PROJECT_LIST_TAG] },
@@ -335,7 +376,10 @@ export const getProjectOptions = () => projectOptionsCache();
 
 const memberOptionsCache = unstable_cache(
   async () => {
-    return db.select({ id: members.id, name: members.name }).from(members).orderBy(asc(members.name));
+    return db
+      .select({ id: members.id, name: members.name })
+      .from(members)
+      .orderBy(asc(members.name));
   },
   ["member-options"],
   { tags: [MEMBER_LIST_TAG] },

@@ -1,8 +1,15 @@
 import { faker } from "@faker-js/faker";
 import Database from "better-sqlite3";
 import { drizzle } from "drizzle-orm/better-sqlite3";
-import { members, projects, tickets, memberStatus, projectStatus, ticketStatus } from "@/lib/schema";
 import type { MemberStatus, ProjectStatus, TicketStatus } from "@/lib/schema";
+import {
+  memberStatus,
+  members,
+  projectStatus,
+  projects,
+  ticketStatus,
+  tickets,
+} from "@/lib/schema";
 
 const sqlite = new Database("./.data/dev.sqlite");
 const db = drizzle(sqlite);
@@ -66,8 +73,12 @@ function seedTickets(count = 120) {
       title,
       summary: faker.lorem.paragraph(),
       status: randomEnumValue(ticketStatus) as TicketStatus,
-      projectId: projectIds.length ? faker.helpers.arrayElement(projectIds).id : null,
-      assignee: memberNames.length ? faker.helpers.arrayElement(memberNames).name : null,
+      projectId: projectIds.length
+        ? faker.helpers.arrayElement(projectIds).id
+        : null,
+      assignee: memberNames.length
+        ? faker.helpers.arrayElement(memberNames).name
+        : null,
     };
   });
   db.insert(tickets).values(data).run();

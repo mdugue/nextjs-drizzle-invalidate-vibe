@@ -1,14 +1,16 @@
 import { MemberList } from "@/app/members/components/MemberList";
-import { getMemberList } from "@/lib/queries";
 import { parsePaginationParams } from "@/lib/pagination";
+import { getMemberList } from "@/lib/queries";
 
 interface MembersPageProps {
   searchParams: Record<string, string | string[] | undefined>;
 }
 
 export default async function MembersPage({ searchParams }: MembersPageProps) {
-  const search = typeof searchParams.search === "string" ? searchParams.search : undefined;
-  const sortParam = typeof searchParams.sort === "string" ? searchParams.sort : "createdAt";
+  const search =
+    typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const sortParam =
+    typeof searchParams.sort === "string" ? searchParams.sort : "createdAt";
   const urlParams = new URLSearchParams();
   Object.entries(searchParams).forEach(([key, value]) => {
     if (typeof value === "string") urlParams.set(key, value);

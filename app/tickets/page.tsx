@@ -1,14 +1,20 @@
 import { TicketList } from "@/app/tickets/components/TicketList";
-import { getMemberOptions, getProjectOptions, getTicketList } from "@/lib/queries";
 import { parsePaginationParams } from "@/lib/pagination";
+import {
+  getMemberOptions,
+  getProjectOptions,
+  getTicketList,
+} from "@/lib/queries";
 
 interface TicketsPageProps {
   searchParams: Record<string, string | string[] | undefined>;
 }
 
 export default async function TicketsPage({ searchParams }: TicketsPageProps) {
-  const search = typeof searchParams.search === "string" ? searchParams.search : undefined;
-  const sortParam = typeof searchParams.sort === "string" ? searchParams.sort : "createdAt";
+  const search =
+    typeof searchParams.search === "string" ? searchParams.search : undefined;
+  const sortParam =
+    typeof searchParams.sort === "string" ? searchParams.sort : "createdAt";
   const urlParams = new URLSearchParams();
   Object.entries(searchParams).forEach(([key, value]) => {
     if (typeof value === "string") urlParams.set(key, value);
@@ -24,8 +30,14 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const projects = await getProjectOptions();
   const members = await getMemberOptions();
 
-  const projectOptions = projects.map((project) => ({ id: project.id, label: project.title }));
-  const memberOptions = members.map((member) => ({ id: member.id, label: member.name }));
+  const projectOptions = projects.map((project) => ({
+    id: project.id,
+    label: project.title,
+  }));
+  const memberOptions = members.map((member) => ({
+    id: member.id,
+    label: member.name,
+  }));
 
   return (
     <TicketList

@@ -1,12 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import type { Ticket } from "@/lib/schema";
-import { ticketFormSchema, type TicketFormValues } from "@/lib/zod";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import {
   Form,
@@ -17,9 +15,17 @@ import {
   FormMessage,
 } from "@/app/components/ui/form";
 import { Input } from "@/app/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 import { Textarea } from "@/app/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
 import { deleteTicket, updateTicket } from "@/app/tickets/actions";
+import type { Ticket } from "@/lib/schema";
+import { type TicketFormValues, ticketFormSchema } from "@/lib/zod";
 
 interface Option {
   id: number;
@@ -32,7 +38,11 @@ interface TicketDetailFormProps {
   memberOptions: Option[];
 }
 
-export function TicketDetailForm({ ticket, projectOptions, memberOptions }: TicketDetailFormProps) {
+export function TicketDetailForm({
+  ticket,
+  projectOptions,
+  memberOptions,
+}: TicketDetailFormProps) {
   const router = useRouter();
   const form = useForm<TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
@@ -49,9 +59,11 @@ export function TicketDetailForm({ ticket, projectOptions, memberOptions }: Tick
 
   const onSubmit = (values: TicketFormValues) => {
     const formData = new FormData();
-    Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(([key, value]) => {
-      formData.append(key, value === null ? "" : String(value));
-    });
+    Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(
+      ([key, value]) => {
+        formData.append(key, value === null ? "" : String(value));
+      },
+    );
 
     startTransition(async () => {
       try {
@@ -148,7 +160,12 @@ export function TicketDetailForm({ ticket, projectOptions, memberOptions }: Tick
           render={({ field }) => (
             <FormItem>
               <FormLabel>Project</FormLabel>
-              <Select value={field.value ? String(field.value) : ""} onValueChange={(value) => field.onChange(value ? Number(value) : null)}>
+              <Select
+                value={field.value ? String(field.value) : ""}
+                onValueChange={(value) =>
+                  field.onChange(value ? Number(value) : null)
+                }
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select project" />
@@ -193,7 +210,12 @@ export function TicketDetailForm({ ticket, projectOptions, memberOptions }: Tick
           )}
         />
         <div className="flex items-center justify-between pt-4">
-          <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending}>
+          <Button
+            type="button"
+            variant="destructive"
+            onClick={onDelete}
+            disabled={isPending}
+          >
             Delete
           </Button>
           <Button type="submit" disabled={isPending}>

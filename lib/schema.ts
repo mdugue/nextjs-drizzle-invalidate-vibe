@@ -1,13 +1,19 @@
 import { relations, sql } from "drizzle-orm";
-import {
-  integer,
-  sqliteTable,
-  text,
-} from "drizzle-orm/sqlite-core";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const projectStatus = ["planned", "active", "paused", "complete"] as const;
+export const projectStatus = [
+  "planned",
+  "active",
+  "paused",
+  "complete",
+] as const;
 export const ticketStatus = ["todo", "in-progress", "blocked", "done"] as const;
-export const memberStatus = ["invited", "active", "sabbatical", "inactive"] as const;
+export const memberStatus = [
+  "invited",
+  "active",
+  "sabbatical",
+  "inactive",
+] as const;
 
 export type ProjectStatus = (typeof projectStatus)[number];
 export type TicketStatus = (typeof ticketStatus)[number];

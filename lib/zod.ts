@@ -9,19 +9,27 @@ export const basePaginationSchema = z.object({
 });
 
 export const projectFormSchema = z.object({
-  slug: z.string().min(3).regex(slugRegex, "Use lowercase letters, numbers and dashes"),
+  slug: z
+    .string()
+    .min(3)
+    .regex(slugRegex, "Use lowercase letters, numbers and dashes"),
   title: z.string().min(3),
   description: z.string().optional(),
   status: z.enum(projectStatus),
   owner: z.string().min(3),
 });
 
-const projectIdField = z
-  .union([z.coerce.number(), z.literal(""), z.literal("null"), z.undefined()])
-  .transform((value) => {
-    if (value === "" || value === "null" || value === undefined) return null;
-    return value as number;
-  });
+const projectIdField = z.preprocess((value) => {
+  if (
+    value === "" ||
+    value === "null" ||
+    value === null ||
+    value === undefined
+  ) {
+    return null;
+  }
+  return value;
+}, z.coerce.number().nullable());
 
 export const ticketFormSchema = z.object({
   slug: z.string().min(3).regex(slugRegex),

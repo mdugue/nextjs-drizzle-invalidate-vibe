@@ -1,12 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { projectFormSchema, type ProjectFormValues } from "@/lib/zod";
-import { projectStatus, type Project } from "@/lib/schema";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import {
   Form,
@@ -17,7 +15,6 @@ import {
   FormMessage,
 } from "@/app/components/ui/form";
 import { Input } from "@/app/components/ui/input";
-import { Textarea } from "@/app/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -33,7 +30,14 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/app/components/ui/sheet";
-import { createProject, deleteProject, updateProject } from "@/app/projects/actions";
+import { Textarea } from "@/app/components/ui/textarea";
+import {
+  createProject,
+  deleteProject,
+  updateProject,
+} from "@/app/projects/actions";
+import { type Project, projectStatus } from "@/lib/schema";
+import { type ProjectFormValues, projectFormSchema } from "@/lib/zod";
 
 interface ProjectSheetProps {
   project?: Project | null;
@@ -42,7 +46,12 @@ interface ProjectSheetProps {
   onDeleted?: (id: number) => void;
 }
 
-export function ProjectSheet({ project, open, onOpenChange, onDeleted }: ProjectSheetProps) {
+export function ProjectSheet({
+  project,
+  open,
+  onOpenChange,
+  onDeleted,
+}: ProjectSheetProps) {
   const router = useRouter();
   const form = useForm<ProjectFormValues>({
     resolver: zodResolver(projectFormSchema),
@@ -128,7 +137,10 @@ export function ProjectSheet({ project, open, onOpenChange, onDeleted }: Project
           </SheetDescription>
         </SheetHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="flex flex-1 flex-col gap-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-1 flex-col gap-4"
+          >
             <FormField
               control={form.control}
               name="title"
@@ -207,7 +219,12 @@ export function ProjectSheet({ project, open, onOpenChange, onDeleted }: Project
             />
             <div className="mt-auto flex items-center justify-between">
               {project ? (
-                <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={onDelete}
+                  disabled={isPending}
+                >
                   Delete
                 </Button>
               ) : (

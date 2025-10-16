@@ -1,12 +1,12 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { ticketFormSchema } from "@/lib/zod";
-import { tickets } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import type { z } from "zod";
+import { db } from "@/lib/db";
 import { TICKET_DETAIL_TAG, TICKET_LIST_TAG } from "@/lib/queries";
+import { tickets } from "@/lib/schema";
+import { ticketFormSchema } from "@/lib/zod";
 
 function parseFormData<T>(schema: z.ZodSchema<T>, formData: FormData): T {
   const result = schema.safeParse(Object.fromEntries(formData.entries()));

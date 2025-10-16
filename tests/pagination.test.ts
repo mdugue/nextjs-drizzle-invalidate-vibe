@@ -3,7 +3,9 @@ import { cursorPaginate } from "@/lib/pagination";
 
 describe("cursorPaginate", () => {
   it("backfills to keep page length after deletion", async () => {
-    const dataset = Array.from({ length: 50 }, (_, index) => ({ id: index + 1 }));
+    const dataset = Array.from({ length: 50 }, (_, index) => ({
+      id: index + 1,
+    }));
     const { items: firstPage } = await cursorPaginate({
       limit: 5,
       fetcher: async ({ limit }) => dataset.slice(0, limit),

@@ -1,12 +1,10 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { memberFormSchema, type MemberFormValues } from "@/lib/zod";
-import { memberStatus, type Member } from "@/lib/schema";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { Button } from "@/app/components/ui/button";
 import {
   Dialog,
@@ -25,9 +23,21 @@ import {
   FormMessage,
 } from "@/app/components/ui/form";
 import { Input } from "@/app/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 import { Textarea } from "@/app/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/app/components/ui/select";
-import { createMember, deleteMember, updateMember } from "@/app/members/actions";
+import {
+  createMember,
+  deleteMember,
+  updateMember,
+} from "@/app/members/actions";
+import { type Member, memberStatus } from "@/lib/schema";
+import { type MemberFormValues, memberFormSchema } from "@/lib/zod";
 
 interface MemberDialogProps {
   open: boolean;
@@ -36,7 +46,12 @@ interface MemberDialogProps {
   onDeleted?: (id: number) => void;
 }
 
-export function MemberDialog({ open, onOpenChange, member, onDeleted }: MemberDialogProps) {
+export function MemberDialog({
+  open,
+  onOpenChange,
+  member,
+  onDeleted,
+}: MemberDialogProps) {
   const router = useRouter();
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(memberFormSchema),
@@ -209,7 +224,11 @@ export function MemberDialog({ open, onOpenChange, member, onDeleted }: MemberDi
                 <FormItem>
                   <FormLabel>Bio</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={3} placeholder="Quick introduction" />
+                    <Textarea
+                      {...field}
+                      rows={3}
+                      placeholder="Quick introduction"
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -217,7 +236,12 @@ export function MemberDialog({ open, onOpenChange, member, onDeleted }: MemberDi
             />
             <DialogFooter className="flex items-center justify-between gap-2 sm:flex-row">
               {member ? (
-                <Button type="button" variant="destructive" onClick={onDelete} disabled={isPending}>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={onDelete}
+                  disabled={isPending}
+                >
                   Remove
                 </Button>
               ) : (

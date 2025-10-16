@@ -1,12 +1,12 @@
 "use server";
 
-import { revalidateTag } from "next/cache";
-import { z } from "zod";
-import { db } from "@/lib/db";
-import { projectFormSchema } from "@/lib/zod";
-import { projects } from "@/lib/schema";
 import { eq } from "drizzle-orm";
+import { revalidateTag } from "next/cache";
+import type { z } from "zod";
+import { db } from "@/lib/db";
 import { PROJECT_DETAIL_TAG, PROJECT_LIST_TAG } from "@/lib/queries";
+import { projects } from "@/lib/schema";
+import { projectFormSchema } from "@/lib/zod";
 
 function parseFormData<T>(schema: z.ZodSchema<T>, formData: FormData): T {
   const result = schema.safeParse(Object.fromEntries(formData.entries()));
