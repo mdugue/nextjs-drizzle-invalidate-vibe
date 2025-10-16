@@ -2,8 +2,8 @@ import type { NextConfig } from "next";
 
 const config: NextConfig = {
   experimental: {
-    ppr: true,
-    reactCompiler: true,
+    /* ppr: true, */
+    /* reactCompiler: true, */
     serverActions: {
       bodySizeLimit: "2mb",
     },

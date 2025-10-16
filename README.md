@@ -61,17 +61,17 @@ Key patterns:
 
 ## 🧪 Tooling & Scripts
 
-| Command | Description |
-| --- | --- |
-| `bun run dev` | Start Next.js dev server |
-| `bun run build` | Create production build |
-| `bun run start` | Start production server |
+| Command               | Description                    |
+| --------------------- | ------------------------------ |
+| `bun run dev`         | Start Next.js dev server       |
+| `bun run build`       | Create production build        |
+| `bun run start`       | Start production server        |
 | `bun run db:generate` | Generate Drizzle SQL migration |
-| `bun run db:migrate` | Apply migrations |
-| `bun run db:seed` | Seed SQLite database |
-| `bun run lint` | Biome lint/format check |
-| `bun run typecheck` | TypeScript strict check |
-| `bun run test` | Bun test suite |
+| `bun run db:migrate`  | Apply migrations               |
+| `bun run db:seed`     | Seed SQLite database           |
+| `bun run lint`        | Biome lint/format check        |
+| `bun run typecheck`   | TypeScript strict check        |
+| `bun run test`        | Bun test suite                 |
 
 ## 🧰 Extending
 
