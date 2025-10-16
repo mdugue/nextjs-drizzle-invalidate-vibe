@@ -8,13 +8,14 @@ import {
 } from "@/lib/queries";
 
 interface TicketDetailPageProps {
-  params: { id: string };
+  params: Promise<{ id: string }>;
 }
 
 export default async function TicketDetailPage({
   params,
 }: TicketDetailPageProps) {
-  const ticketId = Number(params.id);
+  const { id } = await params;
+  const ticketId = Number(id);
   if (Number.isNaN(ticketId)) {
     notFound();
   }

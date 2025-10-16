@@ -10,7 +10,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:seed": "bun run scripts/seed.ts",
-    "lint": "biome check .",
+    "lint": "biome check app lib tests scripts",
     "typecheck": "tsc --noEmit",
     "test": "bun test"
   },

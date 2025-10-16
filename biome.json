@@ -1,5 +1,30 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.2.6/schema.json",
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "defaultBranch": "main",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": [
+      "app/**",
+      "lib/**",
+      "tests/**",
+      "scripts/**",
+      "README.md",
+      "AGENTS.md",
+      "drizzle.config.ts",
+      "tailwind.config.ts",
+      "postcss.config.mjs",
+      "ultracite.config.ts",
+      "next.config.ts",
+      "tsconfig.json",
+      "components.json",
+      "biome.json"
+    ]
+  },
   "formatter": {
     "indentStyle": "space",
     "indentWidth": 2

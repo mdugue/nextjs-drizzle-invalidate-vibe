@@ -3,18 +3,17 @@ import { parsePaginationParams } from "@/lib/pagination";
 import { getProjectList } from "@/lib/queries";
 
 interface ProjectsPageProps {
-  searchParams: Record<string, string | string[] | undefined>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function ProjectsPage({
   searchParams,
 }: ProjectsPageProps) {
-  const search =
-    typeof searchParams.search === "string" ? searchParams.search : undefined;
-  const sortParam =
-    typeof searchParams.sort === "string" ? searchParams.sort : "createdAt";
+  const params = await searchParams;
+  const search = typeof params.search === "string" ? params.search : undefined;
+  const sortParam = typeof params.sort === "string" ? params.sort : "createdAt";
   const urlParams = new URLSearchParams();
-  Object.entries(searchParams).forEach(([key, value]) => {
+  Object.entries(params).forEach(([key, value]) => {
     if (typeof value === "string") urlParams.set(key, value);
   });
   const pagination = parsePaginationParams(urlParams);
