@@ -76,8 +76,8 @@ export function MemberDialog({
       : undefined,
   });
 
-  React.useEffect(() => {
-    if (!open) {
+  /* React.useEffect(
+    () => () =>
       form.reset({
         slug: "",
         name: "",
@@ -85,17 +85,17 @@ export function MemberDialog({
         status: "invited",
         bio: "",
         role: "",
-      });
-    }
-  }, [open, form]);
+      }),
+    [open, form]
+  ); */
 
   const [isPending, startTransition] = React.useTransition();
 
   const onSubmit = (values: MemberFormValues) => {
     const formData = new FormData();
-    Object.entries(values).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(values)) {
       formData.append(key, value == null ? "" : String(value));
-    });
+    }
 
     startTransition(async () => {
       try {

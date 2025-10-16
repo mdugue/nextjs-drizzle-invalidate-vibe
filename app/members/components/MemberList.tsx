@@ -31,13 +31,13 @@ function buildQuery(
   if (base.sort) {
     params.set("sort", base.sort);
   }
-  Object.entries(overrides).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(overrides)) {
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-  });
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 }

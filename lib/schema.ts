@@ -1,4 +1,4 @@
-import { relations, sql } from "drizzle-orm";
+import { relations } from "drizzle-orm";
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const projectStatus = [
@@ -22,11 +22,11 @@ export type MemberStatus = (typeof memberStatus)[number];
 const timestamps = {
   createdAt: integer("created_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(unixepoch())`),
+    .default(new Date()),
   updatedAt: integer("updated_at", { mode: "timestamp" })
     .notNull()
-    .default(sql`(unixepoch())`)
-    .$onUpdate(() => sql`(unixepoch())`),
+    .default(new Date())
+    .$onUpdate(() => new Date()),
 };
 
 export const projects = sqliteTable("projects", {

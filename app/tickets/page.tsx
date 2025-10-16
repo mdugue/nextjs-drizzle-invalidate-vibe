@@ -15,11 +15,11 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const search = typeof params.search === "string" ? params.search : undefined;
   const sortParam = typeof params.sort === "string" ? params.sort : "createdAt";
   const urlParams = new URLSearchParams();
-  Object.entries(params).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(params)) {
     if (typeof value === "string") {
       urlParams.set(key, value);
     }
-  });
+  }
   const pagination = parsePaginationParams(urlParams);
   const data = await getTicketList({
     cursor: pagination.cursor,

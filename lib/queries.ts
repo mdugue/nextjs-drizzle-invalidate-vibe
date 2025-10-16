@@ -151,7 +151,7 @@ const projectList = unstable_cache(
 export const getProjectList = (params: ListParams) => projectList(params);
 
 export async function getProjectDetail(id: number) {
-  const detail = unstable_cache(
+  const detail = await unstable_cache(
     async () => {
       const [project] = await db
         .select()
@@ -281,7 +281,7 @@ export const getTicketList = (params: ListParams & { projectId?: number }) =>
   ticketList(params);
 
 export async function getTicketDetail(id: number) {
-  const detail = unstable_cache(
+  const detail = await unstable_cache(
     async () => {
       const [ticket] = await db
         .select()
@@ -296,7 +296,7 @@ export async function getTicketDetail(id: number) {
   return detail();
 }
 
-const memberFetcher = async (params: ListParams) => {
+const memberFetcher = (params: ListParams) => {
   const {
     cursor,
     direction = "forward",
@@ -401,7 +401,7 @@ const memberList = unstable_cache(
 export const getMemberList = (params: ListParams) => memberList(params);
 
 export async function getMemberDetail(id: number) {
-  const detail = unstable_cache(
+  const detail = await unstable_cache(
     async () => {
       const [member] = await db
         .select()
