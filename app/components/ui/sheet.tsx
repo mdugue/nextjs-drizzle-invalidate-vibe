@@ -1,5 +1,5 @@
 import * as React from "react";
-import * as SheetPrimitive from "@radix-ui/react-sheet";
+import * as SheetPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -28,7 +28,7 @@ const SheetContent = React.forwardRef<
     <SheetOverlay />
     <SheetPrimitive.Content
       ref={ref}
-      side={side}
+      data-side={side}
       className={cn(
         "fixed inset-y-0 z-50 flex w-full max-w-lg flex-col border bg-background p-6 shadow-lg transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out",
         side === "right" ? "right-0" : "left-0",
