@@ -50,5 +50,6 @@ export const memberFormSchema = z.object({
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;
-export type TicketFormValues = z.infer<typeof ticketFormSchema>;
+export type TicketFormInput = z.input<typeof ticketFormSchema>;
+export type TicketFormValues = z.output<typeof ticketFormSchema>;
 export type MemberFormValues = z.infer<typeof memberFormSchema>;

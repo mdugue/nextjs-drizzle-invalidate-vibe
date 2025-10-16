@@ -48,10 +48,7 @@ export async function cursorPaginate<T, TCursor>(params: {
       direction === "forward"
         ? hasMore
         : Boolean(params.cursor) || records.length === limit + 1,
-    hasPrevious:
-      direction === "backward"
-        ? hasMore
-        : Boolean(params.cursor) || direction === "backward",
+    hasPrevious: direction === "backward" ? hasMore : Boolean(params.cursor),
     nextCursor:
       items.length > 0 ? getCursor(items[items.length - 1]) : params.cursor,
     prevCursor: items.length > 0 ? getCursor(items[0]) : params.cursor,

@@ -21,17 +21,22 @@ export const MEMBER_DETAIL_TAG = (id: number) => `members:detail:${id}`;
 
 type SortOption = "createdAt" | "title";
 
-function encodeCursor(primary: string | number, secondary: number) {
-  return `${encodeURIComponent(String(primary))}::${secondary}`;
+function encodeCursor(primary: Date | string | number, secondary: number) {
+  const serialized =
+    primary instanceof Date ? primary.toISOString() : String(primary);
+  return `${encodeURIComponent(serialized)}::${secondary}`;
 }
 
 function decodeCursor(cursor: string) {
   const [primary, secondary] = cursor.split("::");
   return {
-    primary: decodeURIComponent(primary),
+    primary: decodeURIComponent(primary ?? ""),
     secondary: Number.parseInt(secondary ?? "0", 10),
   };
 }
+
+const isSql = (value: SQL<unknown> | undefined): value is SQL<unknown> =>
+  value !== undefined;
 
 type ListParams = CursorPaginationParams<string> & {
   search?: string;
@@ -50,41 +55,60 @@ const projectFetcher = async (params: ListParams) => {
   const where: SQL<unknown>[] = [];
   if (search) {
     const pattern = `%${search.toLowerCase()}%`;
-    where.push(
-      or(
-        like(projects.title, pattern),
-        like(projects.slug, pattern),
-        like(projects.owner, pattern),
-      ),
-    );
+    const searchConditions = [
+      like(projects.title, pattern),
+      like(projects.slug, pattern),
+      like(projects.owner, pattern),
+    ].filter(isSql);
+    if (searchConditions.length) {
+      const combinedSearch =
+        searchConditions.length === 1
+          ? searchConditions[0]
+          : or(...searchConditions);
+      if (combinedSearch) {
+        where.push(combinedSearch);
+      }
+    }
   }
 
   const conditions = [...where];
   if (cursor) {
     const { primary, secondary } = decodeCursor(cursor);
     if (sort === "createdAt") {
-      const value = Number(primary);
-      const comparator = direction === "forward" ? lt : gt;
-      const tieComparator = direction === "forward" ? lt : gt;
-      conditions.push(
-        or(
-          comparator(projects.createdAt, value),
-          and(
-            eq(projects.createdAt, value),
-            tieComparator(projects.id, secondary),
-          ),
-        ),
-      );
+      const value = new Date(primary);
+      if (!Number.isNaN(value.getTime())) {
+        const comparator = direction === "forward" ? lt : gt;
+        const tieComparator = direction === "forward" ? lt : gt;
+        const compareResult = comparator(projects.createdAt, value);
+        const tieCondition = and(
+          eq(projects.createdAt, value),
+          tieComparator(projects.id, secondary),
+        );
+        if (compareResult) {
+          const combined = or(compareResult, tieCondition);
+          conditions.push(combined ?? tieCondition ?? compareResult);
+        } else {
+          if (tieCondition) {
+            conditions.push(tieCondition);
+          }
+        }
+      }
     } else {
       const value = String(primary);
       const comparator = direction === "forward" ? lt : gt;
       const tieComparator = direction === "forward" ? lt : gt;
-      conditions.push(
-        or(
-          comparator(projects.title, value),
-          and(eq(projects.title, value), tieComparator(projects.id, secondary)),
-        ),
+      const primaryComparison = comparator(projects.title, value);
+      const tieCondition = and(
+        eq(projects.title, value),
+        tieComparator(projects.id, secondary),
       );
+      if (primaryComparison && tieCondition) {
+        conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
+      } else if (primaryComparison) {
+        conditions.push(primaryComparison);
+      } else if (tieCondition) {
+        conditions.push(tieCondition);
+      }
     }
   }
 
@@ -97,12 +121,12 @@ const projectFetcher = async (params: ListParams) => {
         ? [asc(projects.title), asc(projects.id)]
         : [desc(projects.title), desc(projects.id)];
 
-  const rows = await db
-    .select()
-    .from(projects)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(...orderBy)
-    .limit(limit);
+  const baseQuery = db.select().from(projects);
+  const filteredQuery = conditions.length
+    ? baseQuery.where(and(...conditions))
+    : baseQuery;
+
+  const rows = await filteredQuery.orderBy(...orderBy).limit(limit);
 
   return rows;
 };
@@ -162,13 +186,20 @@ const ticketFetcher = async (
   const where: SQL<unknown>[] = [];
   if (search) {
     const pattern = `%${search.toLowerCase()}%`;
-    where.push(
-      or(
-        like(tickets.title, pattern),
-        like(tickets.slug, pattern),
-        like(tickets.assignee, pattern),
-      ),
-    );
+    const searchConditions = [
+      like(tickets.title, pattern),
+      like(tickets.slug, pattern),
+      like(tickets.assignee, pattern),
+    ].filter(isSql);
+    if (searchConditions.length) {
+      const combinedSearch =
+        searchConditions.length === 1
+          ? searchConditions[0]
+          : or(...searchConditions);
+      if (combinedSearch) {
+        where.push(combinedSearch);
+      }
+    }
   }
   if (projectId) {
     where.push(eq(tickets.projectId, projectId));
@@ -178,28 +209,40 @@ const ticketFetcher = async (
   if (cursor) {
     const { primary, secondary } = decodeCursor(cursor);
     if (sort === "createdAt") {
-      const value = Number(primary);
-      const comparator = direction === "forward" ? lt : gt;
-      const tieComparator = direction === "forward" ? lt : gt;
-      conditions.push(
-        or(
-          comparator(tickets.createdAt, value),
-          and(
-            eq(tickets.createdAt, value),
-            tieComparator(tickets.id, secondary),
-          ),
-        ),
-      );
+      const value = new Date(primary);
+      if (!Number.isNaN(value.getTime())) {
+        const comparator = direction === "forward" ? lt : gt;
+        const tieComparator = direction === "forward" ? lt : gt;
+        const compareResult = comparator(tickets.createdAt, value);
+        const tieCondition = and(
+          eq(tickets.createdAt, value),
+          tieComparator(tickets.id, secondary),
+        );
+        if (compareResult) {
+          const combined = or(compareResult, tieCondition);
+          conditions.push(combined ?? tieCondition ?? compareResult);
+        } else {
+          if (tieCondition) {
+            conditions.push(tieCondition);
+          }
+        }
+      }
     } else {
       const value = String(primary);
       const comparator = direction === "forward" ? lt : gt;
       const tieComparator = direction === "forward" ? lt : gt;
-      conditions.push(
-        or(
-          comparator(tickets.title, value),
-          and(eq(tickets.title, value), tieComparator(tickets.id, secondary)),
-        ),
+      const primaryComparison = comparator(tickets.title, value);
+      const tieCondition = and(
+        eq(tickets.title, value),
+        tieComparator(tickets.id, secondary),
       );
+      if (primaryComparison && tieCondition) {
+        conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
+      } else if (primaryComparison) {
+        conditions.push(primaryComparison);
+      } else if (tieCondition) {
+        conditions.push(tieCondition);
+      }
     }
   }
 
@@ -212,12 +255,12 @@ const ticketFetcher = async (
         ? [asc(tickets.title), asc(tickets.id)]
         : [desc(tickets.title), desc(tickets.id)];
 
-  return db
-    .select()
-    .from(tickets)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(...orderBy)
-    .limit(limit);
+  const baseQuery = db.select().from(tickets);
+  const filteredQuery = conditions.length
+    ? baseQuery.where(and(...conditions))
+    : baseQuery;
+
+  return filteredQuery.orderBy(...orderBy).limit(limit);
 };
 
 const ticketList = unstable_cache(
@@ -269,41 +312,60 @@ const memberFetcher = async (params: ListParams) => {
   const where: SQL<unknown>[] = [];
   if (search) {
     const pattern = `%${search.toLowerCase()}%`;
-    where.push(
-      or(
-        like(members.name, pattern),
-        like(members.email, pattern),
-        like(members.slug, pattern),
-      ),
-    );
+    const searchConditions = [
+      like(members.name, pattern),
+      like(members.email, pattern),
+      like(members.slug, pattern),
+    ].filter(isSql);
+    if (searchConditions.length) {
+      const combinedSearch =
+        searchConditions.length === 1
+          ? searchConditions[0]
+          : or(...searchConditions);
+      if (combinedSearch) {
+        where.push(combinedSearch);
+      }
+    }
   }
 
   const conditions = [...where];
   if (cursor) {
     const { primary, secondary } = decodeCursor(cursor);
     if (sort === "createdAt") {
-      const value = Number(primary);
-      const comparator = direction === "forward" ? lt : gt;
-      const tieComparator = direction === "forward" ? lt : gt;
-      conditions.push(
-        or(
-          comparator(members.createdAt, value),
-          and(
-            eq(members.createdAt, value),
-            tieComparator(members.id, secondary),
-          ),
-        ),
-      );
+      const value = new Date(primary);
+      if (!Number.isNaN(value.getTime())) {
+        const comparator = direction === "forward" ? lt : gt;
+        const tieComparator = direction === "forward" ? lt : gt;
+        const compareResult = comparator(members.createdAt, value);
+        const tieCondition = and(
+          eq(members.createdAt, value),
+          tieComparator(members.id, secondary),
+        );
+        if (compareResult) {
+          const combined = or(compareResult, tieCondition);
+          conditions.push(combined ?? tieCondition ?? compareResult);
+        } else {
+          if (tieCondition) {
+            conditions.push(tieCondition);
+          }
+        }
+      }
     } else {
       const value = String(primary);
       const comparator = direction === "forward" ? lt : gt;
       const tieComparator = direction === "forward" ? lt : gt;
-      conditions.push(
-        or(
-          comparator(members.name, value),
-          and(eq(members.name, value), tieComparator(members.id, secondary)),
-        ),
+      const primaryComparison = comparator(members.name, value);
+      const tieCondition = and(
+        eq(members.name, value),
+        tieComparator(members.id, secondary),
       );
+      if (primaryComparison && tieCondition) {
+        conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
+      } else if (primaryComparison) {
+        conditions.push(primaryComparison);
+      } else if (tieCondition) {
+        conditions.push(tieCondition);
+      }
     }
   }
 
@@ -316,12 +378,12 @@ const memberFetcher = async (params: ListParams) => {
         ? [asc(members.name), asc(members.id)]
         : [desc(members.name), desc(members.id)];
 
-  return db
-    .select()
-    .from(members)
-    .where(conditions.length ? and(...conditions) : undefined)
-    .orderBy(...orderBy)
-    .limit(limit);
+  const baseQuery = db.select().from(members);
+  const filteredQuery = conditions.length
+    ? baseQuery.where(and(...conditions))
+    : baseQuery;
+
+  return filteredQuery.orderBy(...orderBy).limit(limit);
 };
 
 const memberList = unstable_cache(

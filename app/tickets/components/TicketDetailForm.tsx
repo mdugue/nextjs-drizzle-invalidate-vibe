@@ -25,7 +25,11 @@ import {
 import { Textarea } from "@/app/components/ui/textarea";
 import { deleteTicket, updateTicket } from "@/app/tickets/actions";
 import type { Ticket } from "@/lib/schema";
-import { type TicketFormValues, ticketFormSchema } from "@/lib/zod";
+import {
+  type TicketFormInput,
+  type TicketFormValues,
+  ticketFormSchema,
+} from "@/lib/zod";
 
 interface Option {
   id: number;
@@ -44,7 +48,7 @@ export function TicketDetailForm({
   memberOptions,
 }: TicketDetailFormProps) {
   const router = useRouter();
-  const form = useForm<TicketFormValues>({
+  const form = useForm<TicketFormInput, undefined, TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
     defaultValues: {
       slug: ticket.slug,
@@ -61,7 +65,7 @@ export function TicketDetailForm({
     const formData = new FormData();
     Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(
       ([key, value]) => {
-        formData.append(key, value === null ? "" : String(value));
+        formData.append(key, value == null ? "" : String(value));
       },
     );
 

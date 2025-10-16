@@ -30,7 +30,11 @@ import { createTicket } from "@/app/tickets/actions";
 import { formatDate } from "@/lib/format";
 import type { CursorPaginationResult } from "@/lib/pagination";
 import type { Ticket } from "@/lib/schema";
-import { type TicketFormValues, ticketFormSchema } from "@/lib/zod";
+import {
+  type TicketFormInput,
+  type TicketFormValues,
+  ticketFormSchema,
+} from "@/lib/zod";
 
 interface Option {
   id: number;
@@ -72,7 +76,7 @@ export function TicketList({
   const router = useRouter();
   const [sortValue, setSortValue] = React.useState(sort ?? "createdAt");
   const sortSelectId = React.useId();
-  const form = useForm<TicketFormValues>({
+  const form = useForm<TicketFormInput, undefined, TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
     defaultValues: {
       slug: "",
@@ -90,7 +94,7 @@ export function TicketList({
     const formData = new FormData();
     Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(
       ([key, value]) => {
-        formData.append(key, value === null ? "" : String(value));
+        formData.append(key, value == null ? "" : String(value));
       },
     );
 

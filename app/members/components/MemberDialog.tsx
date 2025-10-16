@@ -93,7 +93,7 @@ export function MemberDialog({
   const onSubmit = (values: MemberFormValues) => {
     const formData = new FormData();
     Object.entries(values).forEach(([key, value]) => {
-      formData.append(key, value ?? "");
+      formData.append(key, value == null ? "" : String(value));
     });
 
     startTransition(async () => {
