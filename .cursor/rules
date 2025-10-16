@@ -1,5 +1,0 @@
-# Cursor Rules
-
-- Keep commit messages descriptive and scoped to the functional change.
-- When editing server actions, prefer async/await patterns and avoid driver-specific APIs.
-- Treat generated artifacts (e.g., bun.lock) as source of truth and check them in.

@@ -6,7 +6,7 @@ export default function HomePage() {
   return (
     <section className="flex flex-1 flex-col justify-center gap-6">
       <div className="space-y-4">
-        <h1 className="text-4xl font-bold tracking-tight">
+        <h1 className="font-bold text-4xl tracking-tight">
           Modern Client-Server data demo
         </h1>
         <p className="max-w-2xl text-lg text-muted-foreground">
@@ -22,10 +22,10 @@ export default function HomePage() {
             Explore Projects <ArrowRight className="ml-2 h-4 w-4" />
           </Link>
         </Button>
-        <Button variant="secondary" asChild>
+        <Button asChild variant="secondary">
           <Link href="/tickets">View Tickets</Link>
         </Button>
-        <Button variant="outline" asChild>
+        <Button asChild variant="outline">
           <Link href="/members">Meet Members</Link>
         </Button>
       </div>

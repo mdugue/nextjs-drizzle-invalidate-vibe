@@ -22,14 +22,14 @@ interface MemberListProps {
 
 function buildQuery(
   base: { search?: string; sort?: string },
-  overrides: Record<string, string | undefined>,
+  overrides: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
   if (base.search) params.set("search", base.search);
   if (base.sort) params.set("sort", base.sort);
   Object.entries(overrides).forEach(([key, value]) => {
-    if (!value) params.delete(key);
-    else params.set(key, value);
+    if (value) params.set(key, value);
+    else params.delete(key);
   });
   const query = params.toString();
   return query ? `?${query}` : "";
@@ -53,7 +53,7 @@ export function MemberList({
         return state.filter((member) => member.id !== action.id);
       }
       return state;
-    },
+    }
   );
 
   const openForCreate = () => {
@@ -71,31 +71,31 @@ export function MemberList({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Team members</h1>
+        <h1 className="font-semibold text-3xl">Team members</h1>
         <Button className="gap-2" onClick={openForCreate}>
           <Plus className="h-4 w-4" /> Invite member
         </Button>
       </div>
       <form className="flex flex-wrap items-center gap-3">
         <Input
+          className="w-full max-w-sm"
+          defaultValue={search ?? ""}
           name="search"
           placeholder="Search members"
-          defaultValue={search ?? ""}
-          className="w-full max-w-sm"
         />
         <div className="flex items-center gap-2">
           <label
+            className="text-muted-foreground text-sm"
             htmlFor={sortSelectId}
-            className="text-sm text-muted-foreground"
           >
             Sort
           </label>
           <select
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             id={sortSelectId}
             name="sort"
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            value={sortValue}
             onChange={(event) => setSortValue(event.target.value)}
+            value={sortValue}
           >
             <option value="createdAt">Newest</option>
             <option value="title">Name</option>
@@ -108,20 +108,20 @@ export function MemberList({
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {optimisticMembers.map((member) => (
           <button
+            className="hover:-translate-y-0.5 flex flex-col gap-2 rounded-lg border bg-card p-4 text-left shadow-sm transition hover:shadow"
             key={member.id}
-            className="flex flex-col gap-2 rounded-lg border bg-card p-4 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow"
             onClick={() => openForMember(member)}
             type="button"
           >
             <div className="flex items-center justify-between">
-              <span className="text-lg font-semibold">{member.name}</span>
+              <span className="font-semibold text-lg">{member.name}</span>
               <Badge variant="secondary">{member.status}</Badge>
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <Mail className="h-4 w-4" />
               <span>{member.email}</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Joined {formatDate(member.createdAt)}
             </p>
             {member.role ? (
@@ -130,16 +130,16 @@ export function MemberList({
           </button>
         ))}
         {optimisticMembers.length === 0 ? (
-          <p className="rounded-lg border bg-card p-6 text-center text-sm text-muted-foreground md:col-span-2 xl:col-span-3">
+          <p className="rounded-lg border bg-card p-6 text-center text-muted-foreground text-sm md:col-span-2 xl:col-span-3">
             No members found
           </p>
         ) : null}
       </div>
       <div className="flex items-center justify-between">
         <Button
-          variant="outline"
-          disabled={!pageInfo.hasPrevious || !pageInfo.prevCursor}
           asChild
+          disabled={!(pageInfo.hasPrevious && pageInfo.prevCursor)}
+          variant="outline"
         >
           <Link
             href={buildQuery(baseQuery, {
@@ -151,9 +151,9 @@ export function MemberList({
           </Link>
         </Button>
         <Button
-          variant="outline"
-          disabled={!pageInfo.hasNext || !pageInfo.nextCursor}
           asChild
+          disabled={!(pageInfo.hasNext && pageInfo.nextCursor)}
+          variant="outline"
         >
           <Link
             href={buildQuery(baseQuery, {
@@ -166,7 +166,6 @@ export function MemberList({
         </Button>
       </div>
       <MemberDialog
-        open={dialogOpen}
         member={selected}
         onDeleted={(id) => {
           applyOptimistic({ type: "delete", id });
@@ -178,6 +177,7 @@ export function MemberList({
             router.refresh();
           }
         }}
+        open={dialogOpen}
       />
     </div>
   );

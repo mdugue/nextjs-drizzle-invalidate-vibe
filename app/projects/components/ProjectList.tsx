@@ -22,16 +22,16 @@ interface ProjectListProps {
 
 function buildQuery(
   base: { search?: string; sort?: string },
-  overrides: Record<string, string | undefined>,
+  overrides: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
   if (base.search) params.set("search", base.search);
   if (base.sort) params.set("sort", base.sort);
   Object.entries(overrides).forEach(([key, value]) => {
-    if (!value) {
-      params.delete(key);
-    } else {
+    if (value) {
       params.set(key, value);
+    } else {
+      params.delete(key);
     }
   });
   const query = params.toString();
@@ -56,7 +56,7 @@ export function ProjectList({
         return state.filter((project) => project.id !== action.id);
       }
       return state;
-    },
+    }
   );
 
   const onCreate = () => {
@@ -74,34 +74,34 @@ export function ProjectList({
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-3xl font-semibold">Projects</h1>
-        <Button onClick={onCreate} className="gap-2">
+        <h1 className="font-semibold text-3xl">Projects</h1>
+        <Button className="gap-2" onClick={onCreate}>
           <Plus className="h-4 w-4" /> Add project
         </Button>
       </div>
       <form className="flex flex-wrap items-center gap-3">
         <div className="relative w-full max-w-sm">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+          <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
           <Input
+            className="pl-10"
+            defaultValue={search ?? ""}
             name="search"
             placeholder="Search projects"
-            defaultValue={search ?? ""}
-            className="pl-10"
           />
         </div>
         <div className="flex items-center gap-2">
           <label
+            className="text-muted-foreground text-sm"
             htmlFor={sortSelectId}
-            className="text-sm text-muted-foreground"
           >
             Sort
           </label>
           <select
+            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
             id={sortSelectId}
             name="sort"
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            value={sortValue}
             onChange={(event) => setSortValue(event.target.value)}
+            value={sortValue}
           >
             <option value="createdAt">Newest</option>
             <option value="title">Title</option>
@@ -114,42 +114,42 @@ export function ProjectList({
       <div className="space-y-2 rounded-lg border bg-card">
         {optimisticProjects.map((project) => (
           <button
-            key={project.id}
             className="flex w-full items-center justify-between gap-4 border-b px-4 py-3 text-left last:border-b-0 hover:bg-muted"
+            key={project.id}
             onClick={() => onSelect(project)}
             type="button"
           >
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">
+                <span className="text-muted-foreground text-sm">
                   #{project.slug}
                 </span>
                 <Badge variant="secondary">{project.status}</Badge>
               </div>
-              <p className="text-lg font-medium">{project.title}</p>
+              <p className="font-medium text-lg">{project.title}</p>
               {project.owner ? (
-                <p className="text-sm text-muted-foreground">
+                <p className="text-muted-foreground text-sm">
                   Owned by {project.owner}
                 </p>
               ) : null}
             </div>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <span>{formatDate(project.createdAt)}</span>
               <ChevronRight className="h-4 w-4" />
             </div>
           </button>
         ))}
         {optimisticProjects.length === 0 ? (
-          <p className="px-4 py-6 text-center text-sm text-muted-foreground">
+          <p className="px-4 py-6 text-center text-muted-foreground text-sm">
             No projects found
           </p>
         ) : null}
       </div>
       <div className="flex items-center justify-between">
         <Button
-          variant="outline"
-          disabled={!pageInfo.hasPrevious || !pageInfo.prevCursor}
           asChild
+          disabled={!(pageInfo.hasPrevious && pageInfo.prevCursor)}
+          variant="outline"
         >
           <Link
             href={buildQuery(baseQuery, {
@@ -161,9 +161,9 @@ export function ProjectList({
           </Link>
         </Button>
         <Button
-          variant="outline"
-          disabled={!pageInfo.hasNext || !pageInfo.nextCursor}
           asChild
+          disabled={!(pageInfo.hasNext && pageInfo.nextCursor)}
+          variant="outline"
         >
           <Link
             href={buildQuery(baseQuery, {
@@ -176,8 +176,6 @@ export function ProjectList({
         </Button>
       </div>
       <ProjectSheet
-        project={selected}
-        open={sheetOpen}
         onDeleted={(id) => {
           applyOptimistic({ type: "delete", id });
         }}
@@ -188,6 +186,8 @@ export function ProjectList({
             router.refresh();
           }
         }}
+        open={sheetOpen}
+        project={selected}
       />
     </div>
   );

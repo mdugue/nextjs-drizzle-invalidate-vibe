@@ -40,12 +40,12 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
 
   return (
     <TicketList
-      tickets={data.items}
+      memberOptions={memberOptions}
       pageInfo={data.pageInfo}
+      projectOptions={projectOptions}
       search={search}
       sort={sortParam}
-      projectOptions={projectOptions}
-      memberOptions={memberOptions}
+      tickets={data.items}
     />
   );
 }

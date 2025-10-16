@@ -126,8 +126,8 @@ export function ProjectSheet({
   };
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="flex flex-col gap-6">
+    <Sheet onOpenChange={onOpenChange} open={open}>
+      <SheetContent className="flex flex-col gap-6" side="right">
         <SheetHeader>
           <SheetTitle>{project ? project.title : "Create project"}</SheetTitle>
           <SheetDescription>
@@ -138,8 +138,8 @@ export function ProjectSheet({
         </SheetHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-1 flex-col gap-4"
+            onSubmit={form.handleSubmit(onSubmit)}
           >
             <FormField
               control={form.control}
@@ -174,7 +174,7 @@ export function ProjectSheet({
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Textarea {...field} rows={4} placeholder="Short summary" />
+                    <Textarea {...field} placeholder="Short summary" rows={4} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,17 +220,17 @@ export function ProjectSheet({
             <div className="mt-auto flex items-center justify-between">
               {project ? (
                 <Button
+                  disabled={isPending}
+                  onClick={onDelete}
                   type="button"
                   variant="destructive"
-                  onClick={onDelete}
-                  disabled={isPending}
                 >
                   Delete
                 </Button>
               ) : (
                 <span />
               )}
-              <Button type="submit" disabled={isPending}>
+              <Button disabled={isPending} type="submit">
                 {project ? "Save changes" : "Create"}
               </Button>
             </div>

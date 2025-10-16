@@ -13,11 +13,11 @@ const DialogOverlay = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Overlay>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Overlay
-    ref={ref}
     className={cn(
       "fixed inset-0 z-50 bg-background/80 backdrop-blur-sm",
-      className,
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -30,14 +30,14 @@ const DialogContent = React.forwardRef<
   <DialogPortal>
     <DialogOverlay />
     <DialogPrimitive.Content
-      ref={ref}
       className={cn(
-        "fixed left-1/2 top-1/2 z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200",
-        className,
+        "fixed top-1/2 left-1/2 z-50 grid w-full max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background p-6 shadow-lg duration-200",
+        className
       )}
+      ref={ref}
       {...props}
     >
-      <DialogPrimitive.Close className="absolute right-4 top-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
+      <DialogPrimitive.Close className="absolute top-4 right-4 rounded-sm opacity-70 transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2">
         <X className="h-4 w-4" />
         <span className="sr-only">Close</span>
       </DialogPrimitive.Close>
@@ -54,7 +54,7 @@ const DialogHeader = ({
   <div
     className={cn(
       "flex flex-col space-y-1.5 text-center sm:text-left",
-      className,
+      className
     )}
     {...props}
   />
@@ -67,7 +67,7 @@ const DialogFooter = ({
   <div
     className={cn(
       "flex flex-col-reverse gap-2 sm:flex-row sm:justify-end",
-      className,
+      className
     )}
     {...props}
   />
@@ -78,11 +78,11 @@ const DialogTitle = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Title>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Title
-    ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight",
-      className,
+      "font-semibold text-lg leading-none tracking-tight",
+      className
     )}
+    ref={ref}
     {...props}
   />
 ));
@@ -93,8 +93,8 @@ const DialogDescription = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Description>
 >(({ className, ...props }, ref) => (
   <DialogPrimitive.Description
+    className={cn("text-muted-foreground text-sm", className)}
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ));

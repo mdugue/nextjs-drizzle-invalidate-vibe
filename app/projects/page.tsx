@@ -27,8 +27,8 @@ export default async function ProjectsPage({
 
   return (
     <ProjectList
-      projects={data.items}
       pageInfo={data.pageInfo}
+      projects={data.items}
       search={search}
       sort={sortParam}
     />

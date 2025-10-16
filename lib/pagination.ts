@@ -58,7 +58,7 @@ export async function cursorPaginate<T, TCursor>(params: {
 }
 
 export function parsePaginationParams(
-  searchParams: URLSearchParams,
+  searchParams: URLSearchParams
 ): CursorPaginationParams<string> {
   const cursor = searchParams.get("cursor") ?? undefined;
   const directionParam = searchParams.get("direction");

@@ -82,15 +82,13 @@ const projectFetcher = async (params: ListParams) => {
         const compareResult = comparator(projects.createdAt, value);
         const tieCondition = and(
           eq(projects.createdAt, value),
-          tieComparator(projects.id, secondary),
+          tieComparator(projects.id, secondary)
         );
         if (compareResult) {
           const combined = or(compareResult, tieCondition);
           conditions.push(combined ?? tieCondition ?? compareResult);
-        } else {
-          if (tieCondition) {
-            conditions.push(tieCondition);
-          }
+        } else if (tieCondition) {
+          conditions.push(tieCondition);
         }
       }
     } else {
@@ -100,7 +98,7 @@ const projectFetcher = async (params: ListParams) => {
       const primaryComparison = comparator(projects.title, value);
       const tieCondition = and(
         eq(projects.title, value),
-        tieComparator(projects.id, secondary),
+        tieComparator(projects.id, secondary)
       );
       if (primaryComparison && tieCondition) {
         conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
@@ -137,9 +135,8 @@ const projectList = unstable_cache(
       cursor: params.cursor,
       direction: params.direction,
       limit: params.limit ?? 20,
-      fetcher: async (fetchParams) => {
-        return projectFetcher({ ...params, ...fetchParams });
-      },
+      fetcher: async (fetchParams) =>
+        projectFetcher({ ...params, ...fetchParams }),
       getCursor: (item) =>
         params.sort === "title"
           ? encodeCursor(item.title ?? "", item.id)
@@ -148,7 +145,7 @@ const projectList = unstable_cache(
     return result;
   },
   ["projects"],
-  { tags: [PROJECT_LIST_TAG] },
+  { tags: [PROJECT_LIST_TAG] }
 );
 
 export const getProjectList = (params: ListParams) => projectList(params);
@@ -164,7 +161,7 @@ export async function getProjectDetail(id: number) {
       return project ?? null;
     },
     ["projects", "detail", String(id)],
-    { tags: [PROJECT_DETAIL_TAG(id)] },
+    { tags: [PROJECT_DETAIL_TAG(id)] }
   );
   return detail();
 }
@@ -172,7 +169,7 @@ export async function getProjectDetail(id: number) {
 const ticketFetcher = async (
   params: ListParams & {
     projectId?: number;
-  },
+  }
 ) => {
   const {
     cursor,
@@ -216,15 +213,13 @@ const ticketFetcher = async (
         const compareResult = comparator(tickets.createdAt, value);
         const tieCondition = and(
           eq(tickets.createdAt, value),
-          tieComparator(tickets.id, secondary),
+          tieComparator(tickets.id, secondary)
         );
         if (compareResult) {
           const combined = or(compareResult, tieCondition);
           conditions.push(combined ?? tieCondition ?? compareResult);
-        } else {
-          if (tieCondition) {
-            conditions.push(tieCondition);
-          }
+        } else if (tieCondition) {
+          conditions.push(tieCondition);
         }
       }
     } else {
@@ -234,7 +229,7 @@ const ticketFetcher = async (
       const primaryComparison = comparator(tickets.title, value);
       const tieCondition = and(
         eq(tickets.title, value),
-        tieComparator(tickets.id, secondary),
+        tieComparator(tickets.id, secondary)
       );
       if (primaryComparison && tieCondition) {
         conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
@@ -279,7 +274,7 @@ const ticketList = unstable_cache(
     return result;
   },
   ["tickets"],
-  { tags: [TICKET_LIST_TAG] },
+  { tags: [TICKET_LIST_TAG] }
 );
 
 export const getTicketList = (params: ListParams & { projectId?: number }) =>
@@ -296,7 +291,7 @@ export async function getTicketDetail(id: number) {
       return ticket ?? null;
     },
     ["tickets", "detail", String(id)],
-    { tags: [TICKET_DETAIL_TAG(id)] },
+    { tags: [TICKET_DETAIL_TAG(id)] }
   );
   return detail();
 }
@@ -339,15 +334,13 @@ const memberFetcher = async (params: ListParams) => {
         const compareResult = comparator(members.createdAt, value);
         const tieCondition = and(
           eq(members.createdAt, value),
-          tieComparator(members.id, secondary),
+          tieComparator(members.id, secondary)
         );
         if (compareResult) {
           const combined = or(compareResult, tieCondition);
           conditions.push(combined ?? tieCondition ?? compareResult);
-        } else {
-          if (tieCondition) {
-            conditions.push(tieCondition);
-          }
+        } else if (tieCondition) {
+          conditions.push(tieCondition);
         }
       }
     } else {
@@ -357,7 +350,7 @@ const memberFetcher = async (params: ListParams) => {
       const primaryComparison = comparator(members.name, value);
       const tieCondition = and(
         eq(members.name, value),
-        tieComparator(members.id, secondary),
+        tieComparator(members.id, secondary)
       );
       if (primaryComparison && tieCondition) {
         conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
@@ -402,7 +395,7 @@ const memberList = unstable_cache(
     return result;
   },
   ["members"],
-  { tags: [MEMBER_LIST_TAG] },
+  { tags: [MEMBER_LIST_TAG] }
 );
 
 export const getMemberList = (params: ListParams) => memberList(params);
@@ -418,33 +411,31 @@ export async function getMemberDetail(id: number) {
       return member ?? null;
     },
     ["members", "detail", String(id)],
-    { tags: [MEMBER_DETAIL_TAG(id)] },
+    { tags: [MEMBER_DETAIL_TAG(id)] }
   );
   return detail();
 }
 
 const projectOptionsCache = unstable_cache(
-  async () => {
-    return db
+  async () =>
+    db
       .select({ id: projects.id, title: projects.title })
       .from(projects)
-      .orderBy(asc(projects.title));
-  },
+      .orderBy(asc(projects.title)),
   ["project-options"],
-  { tags: [PROJECT_LIST_TAG] },
+  { tags: [PROJECT_LIST_TAG] }
 );
 
 export const getProjectOptions = () => projectOptionsCache();
 
 const memberOptionsCache = unstable_cache(
-  async () => {
-    return db
+  async () =>
+    db
       .select({ id: members.id, name: members.name })
       .from(members)
-      .orderBy(asc(members.name));
-  },
+      .orderBy(asc(members.name)),
   ["member-options"],
-  { tags: [MEMBER_LIST_TAG] },
+  { tags: [MEMBER_LIST_TAG] }
 );
 
 export const getMemberOptions = () => memberOptionsCache();

@@ -17,13 +17,11 @@ const FormField = <
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
 >(
-  props: ControllerProps<TFieldValues, TName>,
-) => {
-  return <Controller {...props} />;
-};
+  props: ControllerProps<TFieldValues, TName>
+) => <Controller {...props} />;
 
 const FormItemContext = React.createContext<{ id: string } | undefined>(
-  undefined,
+  undefined
 );
 const useFormItemContext = () => {
   const context = React.useContext(FormItemContext);
@@ -40,7 +38,7 @@ const FormItem = React.forwardRef<
   const id = React.useId();
   return (
     <FormItemContext.Provider value={{ id }}>
-      <div ref={ref} className={cn("space-y-2", className)} {...props} />
+      <div className={cn("space-y-2", className)} ref={ref} {...props} />
     </FormItemContext.Provider>
   );
 });
@@ -53,9 +51,9 @@ const FormLabel = React.forwardRef<
   const { id } = useFormItemContext();
   return (
     <LabelPrimitive.Root
-      ref={ref}
-      className={cn("text-sm font-medium", className)}
+      className={cn("font-medium text-sm", className)}
       htmlFor={id}
+      ref={ref}
       {...props}
     />
   );
@@ -67,7 +65,7 @@ const FormControl = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof Slot>
 >(({ ...props }, ref) => {
   const { id } = useFormItemContext();
-  return <Slot ref={ref} id={id} {...props} />;
+  return <Slot id={id} ref={ref} {...props} />;
 });
 FormControl.displayName = "FormControl";
 
@@ -78,10 +76,10 @@ const FormMessage = ({
   const { id } = useFormItemContext();
   const form = useFormContext();
   const fieldState = form.getFieldState(id as never, form.formState);
-  if (!children && !fieldState.error) return null;
+  if (!(children || fieldState.error)) return null;
   return (
     <p
-      className={cn("text-sm font-medium text-destructive", className)}
+      className={cn("font-medium text-destructive text-sm", className)}
       role="alert"
     >
       {children ?? fieldState.error?.message}
@@ -93,7 +91,7 @@ const FormDescription = ({
   className,
   ...props
 }: React.HTMLAttributes<HTMLParagraphElement>) => (
-  <p className={cn("text-sm text-muted-foreground", className)} {...props} />
+  <p className={cn("text-muted-foreground text-sm", className)} {...props} />
 );
 
 export {

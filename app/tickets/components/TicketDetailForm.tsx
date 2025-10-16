@@ -66,7 +66,7 @@ export function TicketDetailForm({
     Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(
       ([key, value]) => {
         formData.append(key, value == null ? "" : String(value));
-      },
+      }
     );
 
     startTransition(async () => {
@@ -95,7 +95,7 @@ export function TicketDetailForm({
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
         <FormField
           control={form.control}
           name="title"
@@ -141,7 +141,7 @@ export function TicketDetailForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Status</FormLabel>
-              <Select value={field.value} onValueChange={field.onChange}>
+              <Select onValueChange={field.onChange} value={field.value}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue />
@@ -165,10 +165,10 @@ export function TicketDetailForm({
             <FormItem>
               <FormLabel>Project</FormLabel>
               <Select
-                value={field.value ? String(field.value) : ""}
                 onValueChange={(value) =>
                   field.onChange(value ? Number(value) : null)
                 }
+                value={field.value ? String(field.value) : ""}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -194,7 +194,7 @@ export function TicketDetailForm({
           render={({ field }) => (
             <FormItem>
               <FormLabel>Assignee</FormLabel>
-              <Select value={field.value ?? ""} onValueChange={field.onChange}>
+              <Select onValueChange={field.onChange} value={field.value ?? ""}>
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select member" />
@@ -215,14 +215,14 @@ export function TicketDetailForm({
         />
         <div className="flex items-center justify-between pt-4">
           <Button
+            disabled={isPending}
+            onClick={onDelete}
             type="button"
             variant="destructive"
-            onClick={onDelete}
-            disabled={isPending}
           >
             Delete
           </Button>
-          <Button type="submit" disabled={isPending}>
+          <Button disabled={isPending} type="submit">
             Save changes
           </Button>
         </div>

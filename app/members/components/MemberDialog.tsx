@@ -129,7 +129,7 @@ export function MemberDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog onOpenChange={onOpenChange} open={open}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle>{member ? member.name : "Invite member"}</DialogTitle>
@@ -140,7 +140,7 @@ export function MemberDialog({
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="name"
@@ -186,7 +186,7 @@ export function MemberDialog({
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Status</FormLabel>
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue />
@@ -226,8 +226,8 @@ export function MemberDialog({
                   <FormControl>
                     <Textarea
                       {...field}
-                      rows={3}
                       placeholder="Quick introduction"
+                      rows={3}
                     />
                   </FormControl>
                   <FormMessage />
@@ -237,17 +237,17 @@ export function MemberDialog({
             <DialogFooter className="flex items-center justify-between gap-2 sm:flex-row">
               {member ? (
                 <Button
+                  disabled={isPending}
+                  onClick={onDelete}
                   type="button"
                   variant="destructive"
-                  onClick={onDelete}
-                  disabled={isPending}
                 >
                   Remove
                 </Button>
               ) : (
                 <span />
               )}
-              <Button type="submit" disabled={isPending}>
+              <Button disabled={isPending} type="submit">
                 {member ? "Save changes" : "Invite"}
               </Button>
             </DialogFooter>

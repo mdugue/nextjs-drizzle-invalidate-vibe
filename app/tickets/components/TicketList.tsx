@@ -52,14 +52,14 @@ interface TicketListProps {
 
 function buildQuery(
   base: { search?: string; sort?: string },
-  overrides: Record<string, string | undefined>,
+  overrides: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
   if (base.search) params.set("search", base.search);
   if (base.sort) params.set("sort", base.sort);
   Object.entries(overrides).forEach(([key, value]) => {
-    if (!value) params.delete(key);
-    else params.set(key, value);
+    if (value) params.set(key, value);
+    else params.delete(key);
   });
   const query = params.toString();
   return query ? `?${query}` : "";
@@ -95,7 +95,7 @@ export function TicketList({
     Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(
       ([key, value]) => {
         formData.append(key, value == null ? "" : String(value));
-      },
+      }
     );
 
     startTransition(async () => {
@@ -123,31 +123,31 @@ export function TicketList({
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_380px]">
       <div className="flex flex-col gap-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <h1 className="text-3xl font-semibold">Tickets</h1>
-          <span className="text-sm text-muted-foreground">
+          <h1 className="font-semibold text-3xl">Tickets</h1>
+          <span className="text-muted-foreground text-sm">
             Navigate to view details
           </span>
         </div>
         <form className="flex flex-wrap items-center gap-3">
           <Input
+            className="w-full max-w-sm"
+            defaultValue={search ?? ""}
             name="search"
             placeholder="Search tickets"
-            defaultValue={search ?? ""}
-            className="w-full max-w-sm"
           />
           <div className="flex items-center gap-2">
             <label
+              className="text-muted-foreground text-sm"
               htmlFor={sortSelectId}
-              className="text-sm text-muted-foreground"
             >
               Sort
             </label>
             <select
+              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
               id={sortSelectId}
               name="sort"
-              className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-              value={sortValue}
               onChange={(event) => setSortValue(event.target.value)}
+              value={sortValue}
             >
               <option value="createdAt">Newest</option>
               <option value="title">Title</option>
@@ -171,18 +171,18 @@ export function TicketList({
             <tbody>
               {tickets.map((ticket) => {
                 const project = projectOptions.find(
-                  (option) => option.id === ticket.projectId,
+                  (option) => option.id === ticket.projectId
                 );
                 return (
-                  <tr key={ticket.id} className="border-t">
+                  <tr className="border-t" key={ticket.id}>
                     <td className="px-4 py-3">
                       <Link
-                        href={`/tickets/${ticket.id}`}
                         className="font-medium text-primary hover:underline"
+                        href={`/tickets/${ticket.id}`}
                       >
                         {ticket.title}
                       </Link>
-                      <div className="text-xs text-muted-foreground">
+                      <div className="text-muted-foreground text-xs">
                         {ticket.slug}
                       </div>
                     </td>
@@ -200,8 +200,8 @@ export function TicketList({
               {tickets.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={5}
                     className="px-4 py-8 text-center text-muted-foreground"
+                    colSpan={5}
                   >
                     No tickets found
                   </td>
@@ -212,9 +212,9 @@ export function TicketList({
         </div>
         <div className="flex items-center justify-between">
           <Button
-            variant="outline"
-            disabled={!pageInfo.hasPrevious || !pageInfo.prevCursor}
             asChild
+            disabled={!(pageInfo.hasPrevious && pageInfo.prevCursor)}
+            variant="outline"
           >
             <Link
               href={buildQuery(baseQuery, {
@@ -226,9 +226,9 @@ export function TicketList({
             </Link>
           </Button>
           <Button
-            variant="outline"
-            disabled={!pageInfo.hasNext || !pageInfo.nextCursor}
             asChild
+            disabled={!(pageInfo.hasNext && pageInfo.nextCursor)}
+            variant="outline"
           >
             <Link
               href={buildQuery(baseQuery, {
@@ -244,15 +244,15 @@ export function TicketList({
       <aside className="rounded-lg border bg-card p-6">
         <div className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          <h2 className="text-lg font-semibold">Create ticket</h2>
+          <h2 className="font-semibold text-lg">Create ticket</h2>
         </div>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-muted-foreground text-sm">
           Capture a new work item and assign it to a project.
         </p>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(onSubmit)}
             className="mt-4 space-y-4"
+            onSubmit={form.handleSubmit(onSubmit)}
           >
             <FormField
               control={form.control}
@@ -289,8 +289,8 @@ export function TicketList({
                   <FormControl>
                     <Textarea
                       {...field}
-                      rows={3}
                       placeholder="Short problem statement"
+                      rows={3}
                     />
                   </FormControl>
                   <FormMessage />
@@ -327,10 +327,10 @@ export function TicketList({
                 <FormItem>
                   <FormLabel>Project</FormLabel>
                   <Select
-                    value={field.value ? String(field.value) : ""}
                     onValueChange={(value) =>
                       field.onChange(value ? Number(value) : null)
                     }
+                    value={field.value ? String(field.value) : ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -357,8 +357,8 @@ export function TicketList({
                 <FormItem>
                   <FormLabel>Assignee</FormLabel>
                   <Select
-                    value={field.value ?? ""}
                     onValueChange={field.onChange}
+                    value={field.value ?? ""}
                   >
                     <FormControl>
                       <SelectTrigger>
@@ -378,7 +378,7 @@ export function TicketList({
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full" disabled={isPending}>
+            <Button className="w-full" disabled={isPending} type="submit">
               Create ticket
             </Button>
           </form>
