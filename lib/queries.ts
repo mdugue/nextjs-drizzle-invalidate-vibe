@@ -1,5 +1,5 @@
 import type { AnyColumn, SQL } from "drizzle-orm";
-import { and, asc, desc, eq, gt, like, lt, or } from "drizzle-orm";
+import { and, asc, desc, eq, gt, isNull, like, lt, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import {
@@ -15,13 +15,17 @@ import {
   type Ticket,
   tickets,
 } from "@/lib/schema";
+import { getVersionCount } from "@/lib/versioning";
 
 export const PROJECT_LIST_TAG = "projects:list";
 export const PROJECT_DETAIL_TAG = (id: number) => `projects:detail:${id}`;
+export const PROJECT_VERSION_TAG = (id: number) => `projects:versions:${id}`;
 export const TICKET_LIST_TAG = "tickets:list";
 export const TICKET_DETAIL_TAG = (id: number) => `tickets:detail:${id}`;
+export const TICKET_VERSION_TAG = (id: number) => `tickets:versions:${id}`;
 export const MEMBER_LIST_TAG = "members:list";
 export const MEMBER_DETAIL_TAG = (id: number) => `members:detail:${id}`;
+export const MEMBER_VERSION_TAG = (id: number) => `members:versions:${id}`;
 
 type SortOption = "createdAt" | "title";
 
@@ -171,6 +175,7 @@ function resolveOrderBy({
 type ListParams = CursorPaginationParams<string> & {
   search?: string;
   sort?: SortOption;
+  showDeleted?: boolean;
 };
 
 const projectFetcher = (params: ListParams) => {
@@ -180,9 +185,14 @@ const projectFetcher = (params: ListParams) => {
     search,
     limit = DEFAULT_LIST_LIMIT,
     sort = "createdAt",
+    showDeleted = false,
   } = params;
 
   const where: SQL<unknown>[] = [];
+
+  if (!showDeleted) {
+    where.push(isNull(projects.deletedAt));
+  }
 
   appendSearchConditions(where, search, [
     (pattern) => like(projects.title, pattern),
@@ -266,9 +276,14 @@ const ticketFetcher = (
     limit = DEFAULT_LIST_LIMIT,
     sort = "createdAt",
     projectId,
+    showDeleted = false,
   } = params;
 
   const where: SQL<unknown>[] = [];
+
+  if (!showDeleted) {
+    where.push(isNull(tickets.deletedAt));
+  }
 
   appendSearchConditions(where, search, [
     (pattern) => like(tickets.title, pattern),
@@ -352,8 +367,13 @@ const memberFetcher = (params: ListParams) => {
     search,
     limit = DEFAULT_LIST_LIMIT,
     sort = "createdAt",
+    showDeleted = false,
   } = params;
   const where: SQL<unknown>[] = [];
+
+  if (!showDeleted) {
+    where.push(isNull(members.deletedAt));
+  }
 
   appendSearchConditions(where, search, [
     (pattern) => like(members.name, pattern),
@@ -425,11 +445,24 @@ export async function getMemberDetail(id: number) {
   return detail();
 }
 
+export function getProjectVersionCount(id: number): Promise<number> {
+  return getVersionCount("project", id);
+}
+
+export function getTicketVersionCount(id: number): Promise<number> {
+  return getVersionCount("ticket", id);
+}
+
+export function getMemberVersionCount(id: number): Promise<number> {
+  return getVersionCount("member", id);
+}
+
 const projectOptionsCache = unstable_cache(
   async () =>
     db
       .select({ id: projects.id, title: projects.title })
       .from(projects)
+      .where(isNull(projects.deletedAt))
       .orderBy(asc(projects.title)),
   ["project-options"],
   { tags: [PROJECT_LIST_TAG] }
@@ -442,6 +475,7 @@ const memberOptionsCache = unstable_cache(
     db
       .select({ id: members.id, name: members.name })
       .from(members)
+      .where(isNull(members.deletedAt))
       .orderBy(asc(members.name)),
   ["member-options"],
   { tags: [MEMBER_LIST_TAG] }

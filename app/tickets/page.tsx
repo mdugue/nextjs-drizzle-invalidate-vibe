@@ -4,6 +4,7 @@ import {
   getMemberOptions,
   getProjectOptions,
   getTicketList,
+  getTicketVersionCount,
 } from "@/lib/queries";
 
 type TicketsPageProps = {
@@ -40,6 +41,15 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     label: member.name,
   }));
 
+  const versionCounts = await Promise.all(
+    data.items.map((ticket) => getTicketVersionCount(ticket.id))
+  );
+
+  const ticketsWithVersions = data.items.map((ticket, index) => ({
+    ...ticket,
+    versionCount: versionCounts[index],
+  }));
+
   return (
     <TicketList
       memberOptions={memberOptions}
@@ -47,7 +57,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       projectOptions={projectOptions}
       search={search}
       sort={sortParam}
-      tickets={data.items}
+      tickets={ticketsWithVersions}
     />
   );
 }

@@ -3,24 +3,34 @@
 import { ChevronRight, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useId, useOptimistic, useState } from "react";
+import { useEffect, useId, useOptimistic, useState } from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
+import { VersionBadge } from "@/app/components/version-badge";
+import { VersionHistoryDialog } from "@/app/components/version-history-dialog";
+import {
+  getProjectVersionDiff,
+  getProjectVersionHistory,
+  restoreProject,
+} from "@/app/projects/actions";
 import { ProjectSheet } from "@/app/projects/components/project-sheet";
 import { formatDate } from "@/lib/format";
 import type { CursorPaginationResult } from "@/lib/pagination";
-import type { Project } from "@/lib/schema";
+import type { Project, ProjectHistory } from "@/lib/schema";
+
+type ProjectWithVersion = Project & { versionCount?: number };
 
 type ProjectListProps = {
-  projects: Project[];
+  projects: ProjectWithVersion[];
   pageInfo: CursorPaginationResult<Project, string>["pageInfo"];
   search?: string;
   sort?: string;
+  showDeleted?: boolean;
 };
 
 function buildQuery(
-  base: { search?: string; sort?: string },
+  base: { search?: string; sort?: string; showDeleted?: boolean },
   overrides: Record<string, string | undefined>
 ) {
   const params = new URLSearchParams();
@@ -29,6 +39,9 @@ function buildQuery(
   }
   if (base.sort) {
     params.set("sort", base.sort);
+  }
+  if (base.showDeleted) {
+    params.set("showDeleted", "true");
   }
   for (const [key, value] of Object.entries(overrides)) {
     if (value) {
@@ -46,12 +59,18 @@ export function ProjectList({
   pageInfo,
   search,
   sort,
+  showDeleted = false,
 }: ProjectListProps) {
   const router = useRouter();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [selected, setSelected] = useState<Project | null>(null);
+  const [selected, setSelected] = useState<ProjectWithVersion | null>(null);
   const [sortValue, setSortValue] = useState(sort ?? "createdAt");
+  const [showDeletedValue, setShowDeletedValue] = useState(showDeleted);
   const sortSelectId = useId();
+  const [versionHistoryOpen, setVersionHistoryOpen] = useState(false);
+  const [versionHistoryProject, setVersionHistoryProject] =
+    useState<ProjectWithVersion | null>(null);
+  const [versions, setVersions] = useState<ProjectHistory[]>([]);
   const [optimisticProjects, applyOptimistic] = useOptimistic(
     projects,
     (state, action: { type: "delete"; id: number }) => {
@@ -67,12 +86,23 @@ export function ProjectList({
     setSheetOpen(true);
   };
 
-  const onSelect = (project: Project) => {
+  const onSelect = (project: ProjectWithVersion) => {
     setSelected(project);
     setSheetOpen(true);
   };
 
-  const baseQuery = { search, sort: sortValue };
+  const onVersionHistory = (project: ProjectWithVersion) => {
+    setVersionHistoryProject(project);
+    setVersionHistoryOpen(true);
+  };
+
+  useEffect(() => {
+    if (versionHistoryProject && versionHistoryOpen) {
+      getProjectVersionHistory(versionHistoryProject.id).then(setVersions);
+    }
+  }, [versionHistoryProject, versionHistoryOpen]);
+
+  const baseQuery = { search, sort: sortValue, showDeleted: showDeletedValue };
 
   return (
     <div className="flex flex-col gap-6">
@@ -110,6 +140,17 @@ export function ProjectList({
             <option value="title">Title</option>
           </select>
         </div>
+        <label className="flex cursor-pointer items-center gap-2 text-sm">
+          <input
+            checked={showDeletedValue}
+            className="h-4 w-4 rounded border-gray-300"
+            name="showDeleted"
+            onChange={(event) => setShowDeletedValue(event.target.checked)}
+            type="checkbox"
+            value="true"
+          />
+          <span className="text-muted-foreground">Show deleted</span>
+        </label>
         <Button type="submit" variant="secondary">
           Apply
         </Button>
@@ -117,7 +158,7 @@ export function ProjectList({
       <div className="space-y-2 rounded-lg border bg-card">
         {optimisticProjects.map((project) => (
           <button
-            className="flex w-full items-center justify-between gap-4 border-b px-4 py-3 text-left last:border-b-0 hover:bg-muted"
+            className={`flex w-full items-center justify-between gap-4 border-b px-4 py-3 text-left last:border-b-0 hover:bg-muted ${project.deletedAt ? "opacity-60" : ""}`}
             key={project.id}
             onClick={() => onSelect(project)}
             type="button"
@@ -128,6 +169,17 @@ export function ProjectList({
                   #{project.slug}
                 </span>
                 <Badge variant="secondary">{project.status}</Badge>
+                {project.deletedAt ? (
+                  <Badge className="bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100">
+                    Deleted
+                  </Badge>
+                ) : null}
+                {project.versionCount ? (
+                  <VersionBadge
+                    count={project.versionCount}
+                    onClick={() => onVersionHistory(project)}
+                  />
+                ) : null}
               </div>
               <p className="font-medium text-lg">{project.title}</p>
               {project.owner ? (
@@ -192,6 +244,28 @@ export function ProjectList({
         open={sheetOpen}
         project={selected}
       />
+      {versionHistoryProject ? (
+        <VersionHistoryDialog
+          onGetDiff={async (v1, v2) =>
+            getProjectVersionDiff(versionHistoryProject.id, v1, v2)
+          }
+          onOpenChange={(open) => {
+            setVersionHistoryOpen(open);
+            if (!open) {
+              setVersionHistoryProject(null);
+              setVersions([]);
+              router.refresh();
+            }
+          }}
+          onRestore={async (versionNumber) => {
+            await restoreProject(versionHistoryProject.id, versionNumber);
+            router.refresh();
+          }}
+          open={versionHistoryOpen}
+          title={versionHistoryProject.title}
+          versions={versions}
+        />
+      ) : null}
     </div>
   );
 }
