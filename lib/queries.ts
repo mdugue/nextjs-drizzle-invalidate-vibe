@@ -1,8 +1,12 @@
-import type { SQL } from "drizzle-orm";
+import type { AnyColumn, SQL } from "drizzle-orm";
 import { and, asc, desc, eq, gt, like, lt, or } from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
-import { type CursorPaginationParams, cursorPaginate } from "@/lib/pagination";
+import {
+  type CursorPaginationParams,
+  cursorPaginate,
+  type PaginationDirection,
+} from "@/lib/pagination";
 import {
   type Member,
   members,
@@ -38,95 +42,179 @@ function decodeCursor(cursor: string) {
 const isSql = (value: SQL<unknown> | undefined): value is SQL<unknown> =>
   value !== undefined;
 
+const DEFAULT_LIST_LIMIT = 20;
+
+type SearchBuilder = (pattern: string) => SQL<unknown> | undefined;
+
+function appendSearchConditions(
+  where: SQL<unknown>[],
+  search: string | undefined,
+  builders: SearchBuilder[]
+) {
+  if (!search) {
+    return;
+  }
+  const pattern = `%${search.toLowerCase()}%`;
+  const searchConditions = builders
+    .map((builder) => builder(pattern))
+    .filter(isSql);
+  if (searchConditions.length === 0) {
+    return;
+  }
+  if (searchConditions.length === 1) {
+    where.push(searchConditions[0]);
+    return;
+  }
+  const combined = or(...searchConditions);
+  if (combined) {
+    where.push(combined);
+  }
+}
+
+type CursorConditionConfig = {
+  cursor?: string;
+  direction: PaginationDirection;
+  sort: SortOption;
+  dateColumn: AnyColumn;
+  textColumn: AnyColumn;
+  idColumn: AnyColumn;
+};
+
+function pushCursorConditions(
+  where: SQL<unknown>[],
+  primaryCondition: SQL<unknown> | undefined,
+  tieCondition: SQL<unknown> | undefined
+) {
+  if (primaryCondition && tieCondition) {
+    const combined = or(primaryCondition, tieCondition);
+    if (combined) {
+      where.push(combined);
+      return;
+    }
+  }
+  if (primaryCondition) {
+    where.push(primaryCondition);
+    return;
+  }
+  if (tieCondition) {
+    where.push(tieCondition);
+  }
+}
+
+function appendCursorConditions(
+  where: SQL<unknown>[],
+  {
+    cursor,
+    direction,
+    sort,
+    dateColumn,
+    textColumn,
+    idColumn,
+  }: CursorConditionConfig
+) {
+  if (!cursor) {
+    return;
+  }
+  const { primary, secondary } = decodeCursor(cursor);
+  const comparator = direction === "forward" ? lt : gt;
+  const tieComparator = direction === "forward" ? lt : gt;
+
+  if (sort === "createdAt") {
+    const value = new Date(primary);
+    if (Number.isNaN(value.getTime())) {
+      return;
+    }
+    const primaryCondition = comparator(dateColumn, value);
+    const tieCondition = and(
+      eq(dateColumn, value),
+      tieComparator(idColumn, secondary)
+    );
+    pushCursorConditions(where, primaryCondition, tieCondition);
+    return;
+  }
+
+  const value = String(primary);
+  const primaryCondition = comparator(textColumn, value);
+  const tieCondition = and(
+    eq(textColumn, value),
+    tieComparator(idColumn, secondary)
+  );
+  pushCursorConditions(where, primaryCondition, tieCondition);
+}
+
+type OrderByConfig = {
+  direction: PaginationDirection;
+  sort: SortOption;
+  dateColumn: AnyColumn;
+  textColumn: AnyColumn;
+  idColumn: AnyColumn;
+};
+
+function resolveOrderBy({
+  direction,
+  sort,
+  dateColumn,
+  textColumn,
+  idColumn,
+}: OrderByConfig) {
+  if (sort === "createdAt") {
+    return direction === "forward"
+      ? [desc(dateColumn), desc(idColumn)]
+      : [asc(dateColumn), asc(idColumn)];
+  }
+
+  return direction === "forward"
+    ? [asc(textColumn), asc(idColumn)]
+    : [desc(textColumn), desc(idColumn)];
+}
+
 type ListParams = CursorPaginationParams<string> & {
   search?: string;
   sort?: SortOption;
 };
 
-const projectFetcher = async (params: ListParams) => {
+const projectFetcher = (params: ListParams) => {
   const {
     cursor,
     direction = "forward",
     search,
-    limit = 20,
+    limit = DEFAULT_LIST_LIMIT,
     sort = "createdAt",
   } = params;
 
   const where: SQL<unknown>[] = [];
-  if (search) {
-    const pattern = `%${search.toLowerCase()}%`;
-    const searchConditions = [
-      like(projects.title, pattern),
-      like(projects.slug, pattern),
-      like(projects.owner, pattern),
-    ].filter(isSql);
-    if (searchConditions.length) {
-      const combinedSearch =
-        searchConditions.length === 1
-          ? searchConditions[0]
-          : or(...searchConditions);
-      if (combinedSearch) {
-        where.push(combinedSearch);
-      }
-    }
-  }
 
-  const conditions = [...where];
-  if (cursor) {
-    const { primary, secondary } = decodeCursor(cursor);
-    if (sort === "createdAt") {
-      const value = new Date(primary);
-      if (!Number.isNaN(value.getTime())) {
-        const comparator = direction === "forward" ? lt : gt;
-        const tieComparator = direction === "forward" ? lt : gt;
-        const compareResult = comparator(projects.createdAt, value);
-        const tieCondition = and(
-          eq(projects.createdAt, value),
-          tieComparator(projects.id, secondary)
-        );
-        if (compareResult) {
-          const combined = or(compareResult, tieCondition);
-          conditions.push(combined ?? tieCondition ?? compareResult);
-        } else if (tieCondition) {
-          conditions.push(tieCondition);
-        }
-      }
-    } else {
-      const value = String(primary);
-      const comparator = direction === "forward" ? lt : gt;
-      const tieComparator = direction === "forward" ? lt : gt;
-      const primaryComparison = comparator(projects.title, value);
-      const tieCondition = and(
-        eq(projects.title, value),
-        tieComparator(projects.id, secondary)
-      );
-      if (primaryComparison && tieCondition) {
-        conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
-      } else if (primaryComparison) {
-        conditions.push(primaryComparison);
-      } else if (tieCondition) {
-        conditions.push(tieCondition);
-      }
-    }
-  }
+  appendSearchConditions(where, search, [
+    (pattern) => like(projects.title, pattern),
+    (pattern) => like(projects.slug, pattern),
+    (pattern) => like(projects.owner, pattern),
+  ]);
 
-  const orderBy =
-    sort === "createdAt"
-      ? direction === "forward"
-        ? [desc(projects.createdAt), desc(projects.id)]
-        : [asc(projects.createdAt), asc(projects.id)]
-      : direction === "forward"
-        ? [asc(projects.title), asc(projects.id)]
-        : [desc(projects.title), desc(projects.id)];
+  appendCursorConditions(where, {
+    cursor,
+    direction,
+    sort,
+    dateColumn: projects.createdAt,
+    textColumn: projects.title,
+    idColumn: projects.id,
+  });
 
-  const baseQuery = db.select().from(projects);
-  const filteredQuery = conditions.length
-    ? baseQuery.where(and(...conditions))
-    : baseQuery;
+  const query = where.length
+    ? db
+        .select()
+        .from(projects)
+        .where(and(...where))
+    : db.select().from(projects);
 
-  const rows = await filteredQuery.orderBy(...orderBy).limit(limit);
+  const orderBy = resolveOrderBy({
+    direction,
+    sort,
+    dateColumn: projects.createdAt,
+    textColumn: projects.title,
+    idColumn: projects.id,
+  });
 
-  return rows;
+  return query.orderBy(...orderBy).limit(limit);
 };
 
 const projectList = unstable_cache(
@@ -134,7 +222,7 @@ const projectList = unstable_cache(
     const result = await cursorPaginate<Project, string>({
       cursor: params.cursor,
       direction: params.direction,
-      limit: params.limit ?? 20,
+      limit: params.limit ?? DEFAULT_LIST_LIMIT,
       fetcher: async (fetchParams) =>
         projectFetcher({ ...params, ...fetchParams }),
       getCursor: (item) =>
@@ -166,7 +254,7 @@ export async function getProjectDetail(id: number) {
   return detail();
 }
 
-const ticketFetcher = async (
+const ticketFetcher = (
   params: ListParams & {
     projectId?: number;
   }
@@ -175,87 +263,48 @@ const ticketFetcher = async (
     cursor,
     direction = "forward",
     search,
-    limit = 20,
+    limit = DEFAULT_LIST_LIMIT,
     sort = "createdAt",
     projectId,
   } = params;
 
   const where: SQL<unknown>[] = [];
-  if (search) {
-    const pattern = `%${search.toLowerCase()}%`;
-    const searchConditions = [
-      like(tickets.title, pattern),
-      like(tickets.slug, pattern),
-      like(tickets.assignee, pattern),
-    ].filter(isSql);
-    if (searchConditions.length) {
-      const combinedSearch =
-        searchConditions.length === 1
-          ? searchConditions[0]
-          : or(...searchConditions);
-      if (combinedSearch) {
-        where.push(combinedSearch);
-      }
-    }
-  }
+
+  appendSearchConditions(where, search, [
+    (pattern) => like(tickets.title, pattern),
+    (pattern) => like(tickets.slug, pattern),
+    (pattern) => like(tickets.assignee, pattern),
+  ]);
+
   if (projectId) {
     where.push(eq(tickets.projectId, projectId));
   }
 
-  const conditions = [...where];
-  if (cursor) {
-    const { primary, secondary } = decodeCursor(cursor);
-    if (sort === "createdAt") {
-      const value = new Date(primary);
-      if (!Number.isNaN(value.getTime())) {
-        const comparator = direction === "forward" ? lt : gt;
-        const tieComparator = direction === "forward" ? lt : gt;
-        const compareResult = comparator(tickets.createdAt, value);
-        const tieCondition = and(
-          eq(tickets.createdAt, value),
-          tieComparator(tickets.id, secondary)
-        );
-        if (compareResult) {
-          const combined = or(compareResult, tieCondition);
-          conditions.push(combined ?? tieCondition ?? compareResult);
-        } else if (tieCondition) {
-          conditions.push(tieCondition);
-        }
-      }
-    } else {
-      const value = String(primary);
-      const comparator = direction === "forward" ? lt : gt;
-      const tieComparator = direction === "forward" ? lt : gt;
-      const primaryComparison = comparator(tickets.title, value);
-      const tieCondition = and(
-        eq(tickets.title, value),
-        tieComparator(tickets.id, secondary)
-      );
-      if (primaryComparison && tieCondition) {
-        conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
-      } else if (primaryComparison) {
-        conditions.push(primaryComparison);
-      } else if (tieCondition) {
-        conditions.push(tieCondition);
-      }
-    }
-  }
+  appendCursorConditions(where, {
+    cursor,
+    direction,
+    sort,
+    dateColumn: tickets.createdAt,
+    textColumn: tickets.title,
+    idColumn: tickets.id,
+  });
 
-  const orderBy =
-    sort === "createdAt"
-      ? direction === "forward"
-        ? [desc(tickets.createdAt), desc(tickets.id)]
-        : [asc(tickets.createdAt), asc(tickets.id)]
-      : direction === "forward"
-        ? [asc(tickets.title), asc(tickets.id)]
-        : [desc(tickets.title), desc(tickets.id)];
+  const query = where.length
+    ? db
+        .select()
+        .from(tickets)
+        .where(and(...where))
+    : db.select().from(tickets);
 
-  const baseQuery = db.select().from(tickets);
-  const filteredQuery = conditions.length
-    ? baseQuery.where(and(...conditions))
-    : baseQuery;
+  const orderBy = resolveOrderBy({
+    direction,
+    sort,
+    dateColumn: tickets.createdAt,
+    textColumn: tickets.title,
+    idColumn: tickets.id,
+  });
 
-  return filteredQuery.orderBy(...orderBy).limit(limit);
+  return query.orderBy(...orderBy).limit(limit);
 };
 
 const ticketList = unstable_cache(
@@ -263,7 +312,7 @@ const ticketList = unstable_cache(
     const result = await cursorPaginate<Ticket, string>({
       cursor: params.cursor,
       direction: params.direction,
-      limit: params.limit ?? 20,
+      limit: params.limit ?? DEFAULT_LIST_LIMIT,
       fetcher: async (fetchParams) =>
         ticketFetcher({ ...params, ...fetchParams }),
       getCursor: (item) =>
@@ -301,82 +350,42 @@ const memberFetcher = (params: ListParams) => {
     cursor,
     direction = "forward",
     search,
-    limit = 20,
+    limit = DEFAULT_LIST_LIMIT,
     sort = "createdAt",
   } = params;
   const where: SQL<unknown>[] = [];
-  if (search) {
-    const pattern = `%${search.toLowerCase()}%`;
-    const searchConditions = [
-      like(members.name, pattern),
-      like(members.email, pattern),
-      like(members.slug, pattern),
-    ].filter(isSql);
-    if (searchConditions.length) {
-      const combinedSearch =
-        searchConditions.length === 1
-          ? searchConditions[0]
-          : or(...searchConditions);
-      if (combinedSearch) {
-        where.push(combinedSearch);
-      }
-    }
-  }
 
-  const conditions = [...where];
-  if (cursor) {
-    const { primary, secondary } = decodeCursor(cursor);
-    if (sort === "createdAt") {
-      const value = new Date(primary);
-      if (!Number.isNaN(value.getTime())) {
-        const comparator = direction === "forward" ? lt : gt;
-        const tieComparator = direction === "forward" ? lt : gt;
-        const compareResult = comparator(members.createdAt, value);
-        const tieCondition = and(
-          eq(members.createdAt, value),
-          tieComparator(members.id, secondary)
-        );
-        if (compareResult) {
-          const combined = or(compareResult, tieCondition);
-          conditions.push(combined ?? tieCondition ?? compareResult);
-        } else if (tieCondition) {
-          conditions.push(tieCondition);
-        }
-      }
-    } else {
-      const value = String(primary);
-      const comparator = direction === "forward" ? lt : gt;
-      const tieComparator = direction === "forward" ? lt : gt;
-      const primaryComparison = comparator(members.name, value);
-      const tieCondition = and(
-        eq(members.name, value),
-        tieComparator(members.id, secondary)
-      );
-      if (primaryComparison && tieCondition) {
-        conditions.push(or(primaryComparison, tieCondition) ?? tieCondition);
-      } else if (primaryComparison) {
-        conditions.push(primaryComparison);
-      } else if (tieCondition) {
-        conditions.push(tieCondition);
-      }
-    }
-  }
+  appendSearchConditions(where, search, [
+    (pattern) => like(members.name, pattern),
+    (pattern) => like(members.email, pattern),
+    (pattern) => like(members.slug, pattern),
+  ]);
 
-  const orderBy =
-    sort === "createdAt"
-      ? direction === "forward"
-        ? [desc(members.createdAt), desc(members.id)]
-        : [asc(members.createdAt), asc(members.id)]
-      : direction === "forward"
-        ? [asc(members.name), asc(members.id)]
-        : [desc(members.name), desc(members.id)];
+  appendCursorConditions(where, {
+    cursor,
+    direction,
+    sort,
+    dateColumn: members.createdAt,
+    textColumn: members.name,
+    idColumn: members.id,
+  });
 
-  const baseQuery = db.select().from(members);
-  const filteredQuery = conditions.length
-    ? baseQuery.where(and(...conditions))
-    : baseQuery;
+  const query = where.length
+    ? db
+        .select()
+        .from(members)
+        .where(and(...where))
+    : db.select().from(members);
 
-  return filteredQuery.orderBy(...orderBy).limit(limit);
+  const orderBy = resolveOrderBy({
+    direction,
+    sort,
+    dateColumn: members.createdAt,
+    textColumn: members.name,
+    idColumn: members.id,
+  });
+
+  return query.orderBy(...orderBy).limit(limit);
 };
 
 const memberList = unstable_cache(
@@ -384,7 +393,7 @@ const memberList = unstable_cache(
     const result = await cursorPaginate<Member, string>({
       cursor: params.cursor,
       direction: params.direction,
-      limit: params.limit ?? 20,
+      limit: params.limit ?? DEFAULT_LIST_LIMIT,
       fetcher: async (fetchParams) =>
         memberFetcher({ ...params, ...fetchParams }),
       getCursor: (item) =>

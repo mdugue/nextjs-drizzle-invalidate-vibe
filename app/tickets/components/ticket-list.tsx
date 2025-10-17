@@ -4,7 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as React from "react";
+import { useId, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { Badge } from "@/app/components/ui/badge";
@@ -61,13 +61,13 @@ function buildQuery(
   if (base.sort) {
     params.set("sort", base.sort);
   }
-  Object.entries(overrides).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(overrides)) {
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-  });
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 }
@@ -81,8 +81,8 @@ export function TicketList({
   memberOptions,
 }: TicketListProps) {
   const router = useRouter();
-  const [sortValue, setSortValue] = React.useState(sort ?? "createdAt");
-  const sortSelectId = React.useId();
+  const [sortValue, setSortValue] = useState(sort ?? "createdAt");
+  const sortSelectId = useId();
   const form = useForm<TicketFormInput, undefined, TicketFormValues>({
     resolver: zodResolver(ticketFormSchema),
     defaultValues: {
@@ -95,15 +95,16 @@ export function TicketList({
     },
   });
 
-  const [isPending, startTransition] = React.useTransition();
+  const [isPending, startTransition] = useTransition();
 
   const onSubmit = (values: TicketFormValues) => {
     const formData = new FormData();
-    Object.entries({ ...values, projectId: values.projectId ?? "" }).forEach(
-      ([key, value]) => {
-        formData.append(key, value == null ? "" : String(value));
-      }
-    );
+    for (const [key, value] of Object.entries({
+      ...values,
+      projectId: values.projectId ?? "",
+    })) {
+      formData.append(key, value == null ? "" : String(value));
+    }
 
     startTransition(async () => {
       try {

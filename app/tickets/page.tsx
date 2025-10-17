@@ -1,4 +1,4 @@
-import { TicketList } from "@/app/tickets/components/TicketList";
+import { TicketList } from "@/app/tickets/components/ticket-list";
 import { parsePaginationParams } from "@/lib/pagination";
 import {
   getMemberOptions,

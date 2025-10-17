@@ -1,4 +1,4 @@
-import { MemberList } from "@/app/members/components/MemberList";
+import { MemberList } from "@/app/members/components/member-list";
 import { parsePaginationParams } from "@/lib/pagination";
 import { getMemberList } from "@/lib/queries";
 

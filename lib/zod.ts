@@ -2,6 +2,23 @@ import { z } from "zod";
 import { memberStatus, projectStatus, ticketStatus } from "@/lib/schema";
 
 const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const MIN_SLUG_LENGTH = 3;
+const MIN_TEXT_LENGTH = 3;
+const MIN_ROLE_LENGTH = 2;
+const numericProjectId = z
+  .string()
+  .trim()
+  .regex(/^[0-9]+$/)
+  .transform((value) => Number(value));
+
+const projectIdField = z.union([
+  z.number(),
+  numericProjectId,
+  z.literal("").transform(() => null),
+  z.literal("null").transform(() => null),
+  z.null().transform(() => null),
+  z.undefined().transform(() => null),
+]);
 
 export const basePaginationSchema = z.object({
   cursor: z.string().optional(),
@@ -11,12 +28,12 @@ export const basePaginationSchema = z.object({
 export const projectFormSchema = z.object({
   slug: z
     .string()
-    .min(3)
+    .min(MIN_SLUG_LENGTH)
     .regex(slugRegex, "Use lowercase letters, numbers and dashes"),
-  title: z.string().min(3),
+  title: z.string().min(MIN_TEXT_LENGTH),
   description: z.string().optional(),
   status: z.enum(projectStatus),
-  owner: z.string().min(3),
+  owner: z.string().min(MIN_TEXT_LENGTH),
 });
 
 /* const projectIdField = z.preprocess((value) => {
@@ -32,21 +49,21 @@ export const projectFormSchema = z.object({
 }, z.coerce.number().nullable()); */
 
 export const ticketFormSchema = z.object({
-  slug: z.string().min(3).regex(slugRegex),
-  title: z.string().min(3),
-  summary: z.string().min(3),
+  slug: z.string().min(MIN_SLUG_LENGTH).regex(slugRegex),
+  title: z.string().min(MIN_TEXT_LENGTH),
+  summary: z.string().min(MIN_TEXT_LENGTH),
   status: z.enum(ticketStatus),
-  projectId: z.number().nullable(), // projectIdField,
+  projectId: projectIdField,
   assignee: z.string().optional(),
 });
 
 export const memberFormSchema = z.object({
-  slug: z.string().min(3).regex(slugRegex),
-  name: z.string().min(3),
+  slug: z.string().min(MIN_SLUG_LENGTH).regex(slugRegex),
+  name: z.string().min(MIN_TEXT_LENGTH),
   email: z.string().email(),
   status: z.enum(memberStatus),
   bio: z.string().optional(),
-  role: z.string().min(2),
+  role: z.string().min(MIN_ROLE_LENGTH),
 });
 
 export type ProjectFormValues = z.infer<typeof projectFormSchema>;

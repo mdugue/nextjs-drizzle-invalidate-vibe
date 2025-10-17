@@ -1,4 +1,4 @@
-import { ProjectList } from "@/app/projects/components/ProjectList";
+import { ProjectList } from "@/app/projects/components/project-list";
 import { parsePaginationParams } from "@/lib/pagination";
 import { getProjectList } from "@/lib/queries";
 

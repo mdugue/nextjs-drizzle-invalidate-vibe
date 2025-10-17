@@ -1,5 +1,8 @@
 export type PaginationDirection = "forward" | "backward";
 
+const MIN_PAGINATION_LIMIT = 1;
+const DEFAULT_PAGINATION_LIMIT = 20;
+
 export type CursorPaginationParams<TCursor> = {
   cursor?: TCursor;
   direction?: PaginationDirection;
@@ -29,7 +32,10 @@ export async function cursorPaginate<T, TCursor>(params: {
   fetcher: (args: CursorPaginationFetcherArgs<TCursor>) => Promise<T[]>;
   getCursor: (item: T) => TCursor;
 }): Promise<CursorPaginationResult<T, TCursor>> {
-  const limit = Math.max(1, params.limit ?? 20);
+  const limit = Math.max(
+    MIN_PAGINATION_LIMIT,
+    params.limit ?? DEFAULT_PAGINATION_LIMIT
+  );
   const direction: PaginationDirection = params.direction ?? "forward";
   const { fetcher, getCursor } = params;
 
