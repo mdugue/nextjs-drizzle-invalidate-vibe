@@ -10,6 +10,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
   const params = await searchParams;
   const search = typeof params.search === "string" ? params.search : undefined;
   const sortParam = typeof params.sort === "string" ? params.sort : "createdAt";
+  const showDeleted = params.showDeleted === "true";
   const urlParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (typeof value === "string") {
@@ -23,6 +24,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
     limit: 20,
     search,
     sort: sortParam === "title" ? "title" : "createdAt",
+    showDeleted,
   });
 
   return (
@@ -30,6 +32,7 @@ export default async function MembersPage({ searchParams }: MembersPageProps) {
       members={data.items}
       pageInfo={data.pageInfo}
       search={search}
+      showDeleted={showDeleted}
       sort={sortParam}
     />
   );

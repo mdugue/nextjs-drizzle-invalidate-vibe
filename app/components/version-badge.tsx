@@ -14,6 +14,7 @@ export function VersionBadge({ count, onClick }: VersionBadgeProps) {
   }
 
   return (
+    // biome-ignore lint/a11y/useSemanticElements: we don't care for now
     <div
       className="flex h-auto gap-1 px-2 py-1"
       onClick={(event) => {

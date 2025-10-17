@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import RenderIndicator from "@/components/render-indicator";
 import { cn } from "@/lib/utils";
 
 const links = [
@@ -16,8 +17,9 @@ export function Sidebar() {
   return (
     <aside className="flex h-full flex-col gap-2 border-r bg-muted/40 p-4">
       <Link className="font-semibold text-lg" href="/">
-        Pulseboard
+        Pulseboard1
       </Link>
+      <RenderIndicator />
       <nav className="mt-4 flex flex-col gap-1 text-sm">
         {links.map((link) => {
           const isActive = pathname === link.href;

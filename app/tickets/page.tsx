@@ -14,6 +14,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
   const params = await searchParams;
   const search = typeof params.search === "string" ? params.search : undefined;
   const sortParam = typeof params.sort === "string" ? params.sort : "createdAt";
+  const showDeleted = params.showDeleted === "true";
   const urlParams = new URLSearchParams();
   for (const [key, value] of Object.entries(params)) {
     if (typeof value === "string") {
@@ -27,6 +28,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
     limit: 20,
     search,
     sort: sortParam === "title" ? "title" : "createdAt",
+    showDeleted,
   });
   const projects = await getProjectOptions();
   const members = await getMemberOptions();
@@ -46,6 +48,7 @@ export default async function TicketsPage({ searchParams }: TicketsPageProps) {
       pageInfo={data.pageInfo}
       projectOptions={projectOptions}
       search={search}
+      showDeleted={showDeleted}
       sort={sortParam}
       tickets={data.items}
     />

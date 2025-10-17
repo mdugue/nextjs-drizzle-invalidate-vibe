@@ -3,10 +3,25 @@
 import { ChevronRight, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useOptimistic, useState } from "react";
+import {
+  useEffect,
+  useId,
+  useOptimistic,
+  useState,
+  useTransition,
+} from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
+import { Checkbox } from "@/app/components/ui/checkbox";
 import { Input } from "@/app/components/ui/input";
+import { Label } from "@/app/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/app/components/ui/select";
 import { VersionBadge } from "@/app/components/version-badge";
 import { VersionHistoryDialog } from "@/app/components/version-history-dialog";
 import {
@@ -62,6 +77,7 @@ export function ProjectList({
   showDeleted = false,
 }: ProjectListProps) {
   const router = useRouter();
+  const [isPending, startTransition] = useTransition();
   const [sheetOpen, setSheetOpen] = useState(false);
   const [selected, setSelected] = useState<ProjectWithVersion | null>(null);
   const [sortValue, setSortValue] = useState(sort ?? "createdAt");
@@ -102,6 +118,48 @@ export function ProjectList({
     }
   }, [versionHistoryProject, versionHistoryOpen]);
 
+  const navigateWithParams = (overrides: {
+    search?: string;
+    sort?: string;
+    showDeleted?: boolean;
+  }) => {
+    const params = new URLSearchParams();
+    const searchVal = overrides.search ?? search;
+    const sortVal = overrides.sort ?? sortValue;
+    const showDeletedVal = overrides.showDeleted ?? showDeletedValue;
+
+    if (searchVal) {
+      params.set("search", searchVal);
+    }
+    if (sortVal !== "createdAt") {
+      params.set("sort", sortVal);
+    }
+    if (showDeletedVal) {
+      params.set("showDeleted", "true");
+    }
+
+    const query = params.toString();
+    startTransition(() => {
+      router.push(query ? `/projects?${query}` : "/projects");
+    });
+  };
+
+  const handleFilterChange = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const formData = new FormData(event.currentTarget);
+    navigateWithParams({ search: formData.get("search") as string });
+  };
+
+  const handleSortChange = (value: string) => {
+    setSortValue(value);
+    navigateWithParams({ sort: value });
+  };
+
+  const handleShowDeletedChange = (checked: boolean) => {
+    setShowDeletedValue(checked);
+    navigateWithParams({ showDeleted: checked });
+  };
+
   const baseQuery = { search, sort: sortValue, showDeleted: showDeletedValue };
 
   return (
@@ -112,7 +170,10 @@ export function ProjectList({
           <Plus className="h-4 w-4" /> Add project
         </Button>
       </div>
-      <form className="flex flex-wrap items-center gap-3">
+      <form
+        className="flex flex-wrap items-center gap-3"
+        onSubmit={handleFilterChange}
+      >
         <div className="relative w-full max-w-sm">
           <Search className="absolute top-2.5 left-3 h-4 w-4 text-muted-foreground" />
           <Input
@@ -123,39 +184,40 @@ export function ProjectList({
           />
         </div>
         <div className="flex items-center gap-2">
-          <label
-            className="text-muted-foreground text-sm"
-            htmlFor={sortSelectId}
-          >
+          <Label className="text-muted-foreground" htmlFor={sortSelectId}>
             Sort
-          </label>
-          <select
-            className="h-10 rounded-md border border-input bg-background px-3 text-sm"
-            id={sortSelectId}
+          </Label>
+          <Select
+            disabled={isPending}
             name="sort"
-            onChange={(event) => setSortValue(event.target.value)}
+            onValueChange={handleSortChange}
             value={sortValue}
           >
-            <option value="createdAt">Newest</option>
-            <option value="title">Title</option>
-          </select>
+            <SelectTrigger id={sortSelectId}>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="createdAt">Newest</SelectItem>
+              <SelectItem value="title">Title</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        <label className="flex cursor-pointer items-center gap-2 text-sm">
-          <input
+        <Label className="flex cursor-pointer items-center gap-2 text-sm">
+          <Checkbox
             checked={showDeletedValue}
-            className="h-4 w-4 rounded border-gray-300"
+            disabled={isPending}
             name="showDeleted"
-            onChange={(event) => setShowDeletedValue(event.target.checked)}
-            type="checkbox"
-            value="true"
+            onCheckedChange={handleShowDeletedChange}
           />
           <span className="text-muted-foreground">Show deleted</span>
-        </label>
-        <Button type="submit" variant="secondary">
-          Apply
+        </Label>
+        <Button disabled={isPending} type="submit" variant="secondary">
+          {isPending ? "Loading..." : "Apply"}
         </Button>
       </form>
-      <div className="space-y-2 rounded-lg border bg-card">
+      <div
+        className={`space-y-2 rounded-lg border bg-card transition-opacity ${isPending ? "opacity-60" : "opacity-100"}`}
+      >
         {optimisticProjects.map((project) => (
           <button
             className={`flex w-full items-center justify-between gap-4 border-b px-4 py-3 text-left last:border-b-0 hover:bg-muted ${project.deletedAt ? "opacity-60" : ""}`}
