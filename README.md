@@ -20,7 +20,7 @@ Pulseboard is a production-style Next.js App Router demo showcasing modern clien
 - Next.js 15 (App Router) + React 19 RC
 - TypeScript (strict)
 - Tailwind CSS & shadcn/ui (Radix)
-- Drizzle ORM + libSQL
+- Drizzle ORM + Bun SQLite
 - Bun runtime & test runner
 - Zod + react-hook-form
 - Biome formatter/linter

@@ -1,6 +1,6 @@
 # AGENTS
 
-This repository is Bun-first and demonstrates modern Next.js App Router patterns with Drizzle ORM, libSQL, and granular cache invalidation. Follow the guidance below to keep contributions consistent and production-grade.
+This repository is Bun-first and demonstrates modern Next.js App Router patterns with Drizzle ORM, Bun SQlite, and granular cache invalidation. Follow the guidance below to keep contributions consistent and production-grade.
 
 ## Required checks (before merging)
 
