@@ -62,17 +62,9 @@ export function TicketDetailForm({
   const [isPending, startTransition] = useTransition();
 
   const onSubmit = (values: TicketFormValues) => {
-    const formData = new FormData();
-    for (const [key, value] of Object.entries({
-      ...values,
-      projectId: values.projectId ?? "",
-    })) {
-      formData.append(key, value == null ? "" : String(value));
-    }
-
     startTransition(async () => {
       try {
-        await updateTicket(ticket.id, formData);
+        await updateTicket(ticket.id, values);
         toast.success("Ticket updated");
         router.refresh();
       } catch (error) {

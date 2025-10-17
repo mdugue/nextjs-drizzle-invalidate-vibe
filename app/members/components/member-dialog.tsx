@@ -92,18 +92,13 @@ export function MemberDialog({
   const [isPending, startTransition] = useTransition();
 
   const onSubmit = (values: MemberFormValues) => {
-    const formData = new FormData();
-    for (const [key, value] of Object.entries(values)) {
-      formData.append(key, value == null ? "" : String(value));
-    }
-
     startTransition(async () => {
       try {
         if (member) {
-          await updateMember(member.id, formData);
+          await updateMember(member.id, values);
           toast.success("Member updated");
         } else {
-          await createMember(formData);
+          await createMember(values);
           toast.success("Member added");
         }
         onOpenChange(false);

@@ -22,7 +22,7 @@ export const projectFormSchema = z.object({
   owner: z.string().min(MIN_TEXT_LENGTH),
 });
 
-/* const projectIdField = z.preprocess((value) => {
+const projectIdField = z.preprocess((value) => {
   if (
     value === "" ||
     value === "null" ||
@@ -32,14 +32,14 @@ export const projectFormSchema = z.object({
     return null;
   }
   return value;
-}, z.coerce.number().nullable()); */
+}, z.coerce.number().nullable());
 
 export const ticketFormSchema = z.object({
   slug: z.string().min(MIN_SLUG_LENGTH).regex(slugRegex),
   title: z.string().min(MIN_TEXT_LENGTH),
   summary: z.string().min(MIN_TEXT_LENGTH),
   status: z.enum(ticketStatus),
-  projectId: z.coerce.number<number>().nullable(), // projectIdField,
+  projectId: projectIdField,
   assignee: z.string().optional(),
 });
 

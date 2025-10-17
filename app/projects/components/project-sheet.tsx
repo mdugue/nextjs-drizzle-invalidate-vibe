@@ -89,18 +89,13 @@ export function ProjectSheet({
   const [isPending, startTransition] = useTransition();
 
   const onSubmit = (values: ProjectFormValues) => {
-    const formData = new FormData();
-    for (const [key, value] of Object.entries(values)) {
-      formData.append(key, value ?? "");
-    }
-
     startTransition(async () => {
       try {
         if (project) {
-          await updateProject(project.id, formData);
+          await updateProject(project.id, values);
           toast.success("Project updated");
         } else {
-          await createProject(formData);
+          await createProject(values);
           toast.success("Project created");
         }
         onOpenChange(false);

@@ -2,29 +2,20 @@
 
 import { eq } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
-import type { z } from "zod";
 import { db } from "@/lib/db";
 import { MEMBER_DETAIL_TAG, MEMBER_LIST_TAG } from "@/lib/queries";
 import { members } from "@/lib/schema";
-import { memberFormSchema } from "@/lib/zod";
+import { type MemberFormValues, memberFormSchema } from "@/lib/zod";
 
-function parseFormData<T>(schema: z.ZodSchema<T>, formData: FormData): T {
-  const result = schema.safeParse(Object.fromEntries(formData.entries()));
-  if (!result.success) {
-    throw new Error(result.error.flatten().formErrors.join("\n"));
-  }
-  return result.data;
-}
-
-export async function createMember(formData: FormData) {
-  const values = parseFormData(memberFormSchema, formData);
-  await db.insert(members).values(values);
+export async function createMember(values: MemberFormValues) {
+  const validated = memberFormSchema.parse(values);
+  await db.insert(members).values(validated);
   revalidateTag(MEMBER_LIST_TAG);
 }
 
-export async function updateMember(id: number, formData: FormData) {
-  const values = parseFormData(memberFormSchema, formData);
-  await db.update(members).set(values).where(eq(members.id, id));
+export async function updateMember(id: number, values: MemberFormValues) {
+  const validated = memberFormSchema.parse(values);
+  await db.update(members).set(validated).where(eq(members.id, id));
   revalidateTag(MEMBER_LIST_TAG);
   revalidateTag(MEMBER_DETAIL_TAG(id));
 }

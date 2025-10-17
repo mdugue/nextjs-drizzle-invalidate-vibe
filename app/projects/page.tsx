@@ -22,7 +22,7 @@ export default async function ProjectsPage({
   const data = await getProjectList({
     cursor: pagination.cursor,
     direction: pagination.direction,
-    limit: 20,
+    limit: 5,
     search,
     sort: sortParam === "title" ? "title" : "createdAt",
   });
