@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "bun --bun next dev --turbopack",
-    "build": "next build",
-    "start": "next start",
+    "build": "bun --bun next build",
+    "start": "bun --bun next start",
     "db:migrate": "drizzle-kit migrate",
     "db:generate": "drizzle-kit generate",
     "db:seed": "bun run scripts/seed.ts",

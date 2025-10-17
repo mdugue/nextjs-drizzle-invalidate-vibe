@@ -2,7 +2,6 @@
 
 import { History } from "lucide-react";
 import { Badge } from "@/app/components/ui/badge";
-import { Button } from "@/app/components/ui/button";
 
 type VersionBadgeProps = {
   count: number;
@@ -15,20 +14,25 @@ export function VersionBadge({ count, onClick }: VersionBadgeProps) {
   }
 
   return (
-    <Button
-      className="h-auto gap-1 px-2 py-1"
+    <div
+      className="flex h-auto gap-1 px-2 py-1"
       onClick={(event) => {
         event.stopPropagation();
         onClick();
       }}
-      size="sm"
-      type="button"
-      variant="ghost"
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.stopPropagation();
+          onClick();
+        }
+      }}
+      role="button"
+      tabIndex={0}
     >
-      <History className="h-3 w-3" />
       <Badge className="h-5 px-1.5 text-xs" variant="secondary">
+        <History />
         {count}
       </Badge>
-    </Button>
+    </div>
   );
 }
