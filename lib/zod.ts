@@ -5,20 +5,6 @@ const slugRegex = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const MIN_SLUG_LENGTH = 3;
 const MIN_TEXT_LENGTH = 3;
 const MIN_ROLE_LENGTH = 2;
-const numericProjectId = z
-  .string()
-  .trim()
-  .regex(/^[0-9]+$/)
-  .transform((value) => Number(value));
-
-const projectIdField = z.union([
-  z.number(),
-  numericProjectId,
-  z.literal("").transform(() => null),
-  z.literal("null").transform(() => null),
-  z.null().transform(() => null),
-  z.undefined().transform(() => null),
-]);
 
 export const basePaginationSchema = z.object({
   cursor: z.string().optional(),
@@ -53,7 +39,7 @@ export const ticketFormSchema = z.object({
   title: z.string().min(MIN_TEXT_LENGTH),
   summary: z.string().min(MIN_TEXT_LENGTH),
   status: z.enum(ticketStatus),
-  projectId: projectIdField,
+  projectId: z.coerce.number<number>().nullable(), // projectIdField,
   assignee: z.string().optional(),
 });
 
