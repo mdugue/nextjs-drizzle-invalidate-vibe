@@ -1,0 +1,59 @@
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "defaultBranch": "main",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "ignoreUnknown": true,
+    "includes": ["**", "!node_modules", "!.next", "!dist", "!build"]
+  },
+  "linter": {
+    "enabled": true,
+    "domains": {
+      "next": "recommended",
+      "react": "recommended"
+    },
+    "rules": {
+      "suspicious": {
+        "noUnknownAtRules": "off"
+      }
+    }
+  },
+  "overrides": [
+    // relax rules for shadcn components until they comply
+    {
+      "includes": ["app/components/ui/**/*.tsx"],
+      "linter": {
+        "rules": {
+          "performance": {
+            "noNamespaceImport": "off"
+          },
+          "a11y": {
+            "useSemanticElements": "off",
+            "useFocusableInteractive": "off",
+            "useKeyWithClickEvents": "off",
+            "noNoninteractiveElementInteractions": "off"
+          },
+          "style": {
+            "noMagicNumbers": "off",
+            "noExportedImports": "off"
+          },
+          "correctness": {
+            "noNestedComponentDefinitions": "off"
+          },
+          "nursery": {
+            "noShadow": "off"
+          },
+          "suspicious": {
+            "noDocumentCookie": "off",
+            "noEmptyBlockStatements": "off"
+          }
+        }
+      }
+    }
+  ],
+  "extends": ["ultracite"]
+}
