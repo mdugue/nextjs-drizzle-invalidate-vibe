@@ -3,12 +3,11 @@
 import { Mail, Plus } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as React from "react";
-import { useOptimistic } from "react";
+import { useId, useOptimistic, useState } from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { MemberDialog } from "@/app/members/components/MemberDialog";
+import { MemberDialog } from "@/app/members/components/member-dialog";
 import { formatDate } from "@/lib/format";
 import type { CursorPaginationResult } from "@/lib/pagination";
 import type { Member } from "@/lib/schema";
@@ -49,10 +48,10 @@ export function MemberList({
   sort,
 }: MemberListProps) {
   const router = useRouter();
-  const [selected, setSelected] = React.useState<Member | null>(null);
-  const [dialogOpen, setDialogOpen] = React.useState(false);
-  const [sortValue, setSortValue] = React.useState(sort ?? "createdAt");
-  const sortSelectId = React.useId();
+  const [selected, setSelected] = useState<Member | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [sortValue, setSortValue] = useState(sort ?? "createdAt");
+  const sortSelectId = useId();
   const [optimisticMembers, applyOptimistic] = useOptimistic(
     members,
     (state, action: { type: "delete"; id: number }) => {

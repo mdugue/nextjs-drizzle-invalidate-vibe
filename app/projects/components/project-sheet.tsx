@@ -2,19 +2,11 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import * as React from "react";
+import { useEffect, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type z from "zod";
 import { Button } from "@/app/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/app/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -31,127 +23,135 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/app/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetFooter,
+  SheetHeader,
+  SheetTitle,
+} from "@/app/components/ui/sheet";
 import { Textarea } from "@/app/components/ui/textarea";
 import {
-  createMember,
-  deleteMember,
-  updateMember,
-} from "@/app/members/actions";
-import { type Member, memberStatus } from "@/lib/schema";
-import { type MemberFormValues, memberFormSchema } from "@/lib/zod";
+  createProject,
+  deleteProject,
+  updateProject,
+} from "@/app/projects/actions";
+import { type Project, projectStatus } from "@/lib/schema";
+import { type ProjectFormValues, projectFormSchema } from "@/lib/zod";
 
-type MemberDialogProps = {
+type ProjectSheetProps = {
+  project?: Project | null;
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  member?: Member | null;
   onDeleted?: (id: number) => void;
 };
 
-export function MemberDialog({
+export function ProjectSheet({
+  project,
   open,
   onOpenChange,
-  member,
   onDeleted,
-}: MemberDialogProps) {
+}: ProjectSheetProps) {
   const router = useRouter();
-  const form = useForm<z.infer<typeof memberFormSchema>>({
-    resolver: zodResolver(memberFormSchema),
+  const form = useForm<z.infer<typeof projectFormSchema>>({
+    resolver: zodResolver(projectFormSchema),
     defaultValues: {
       slug: "",
-      name: "",
-      email: "",
-      status: "invited",
-      bio: "",
-      role: "",
+      title: "",
+      description: "",
+      status: "planned",
+      owner: "",
     },
-    values: member
+    values: project
       ? {
-          slug: member.slug,
-          name: member.name,
-          email: member.email,
-          status: member.status,
-          bio: member.bio ?? "",
-          role: member.role ?? "",
+          slug: project.slug,
+          title: project.title,
+          description: project.description ?? "",
+          status: project.status,
+          owner: project.owner ?? "",
         }
       : undefined,
   });
 
-  /* React.useEffect(
-    () => () =>
+  useEffect(() => {
+    if (!open) {
       form.reset({
         slug: "",
-        name: "",
-        email: "",
-        status: "invited",
-        bio: "",
-        role: "",
-      }),
-    [open, form]
-  ); */
+        title: "",
+        description: "",
+        status: "planned",
+        owner: "",
+      });
+    }
+  }, [open, form]);
 
-  const [isPending, startTransition] = React.useTransition();
+  const [isPending, startTransition] = useTransition();
 
-  const onSubmit = (values: MemberFormValues) => {
+  const onSubmit = (values: ProjectFormValues) => {
     const formData = new FormData();
     for (const [key, value] of Object.entries(values)) {
-      formData.append(key, value == null ? "" : String(value));
+      formData.append(key, value ?? "");
     }
 
     startTransition(async () => {
       try {
-        if (member) {
-          await updateMember(member.id, formData);
-          toast.success("Member updated");
+        if (project) {
+          await updateProject(project.id, formData);
+          toast.success("Project updated");
         } else {
-          await createMember(formData);
-          toast.success("Member added");
+          await createProject(formData);
+          toast.success("Project created");
         }
         onOpenChange(false);
         router.refresh();
       } catch (error) {
-        toast.error((error as Error).message ?? "Failed to save member");
+        toast.error((error as Error).message ?? "Failed to save project");
       }
     });
   };
 
   const onDelete = () => {
-    if (!member) {
+    if (!project) {
       return;
     }
     startTransition(async () => {
       try {
-        await deleteMember(member.id);
-        toast.success("Member removed");
-        onDeleted?.(member.id);
+        await deleteProject(project.id);
+        toast.success("Project deleted");
+        onDeleted?.(project.id);
         onOpenChange(false);
         router.refresh();
       } catch (error) {
-        toast.error((error as Error).message ?? "Failed to delete member");
+        toast.error((error as Error).message ?? "Failed to delete project");
       }
     });
   };
 
   return (
-    <Dialog onOpenChange={onOpenChange} open={open}>
-      <DialogContent className="max-w-lg">
-        <DialogHeader>
-          <DialogTitle>{member ? member.name : "Invite member"}</DialogTitle>
-          <DialogDescription>
-            {member
-              ? "Edit profile details and update their status."
-              : "Fill in the details to invite a new teammate."}
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet onOpenChange={onOpenChange} open={open}>
+      <SheetContent className="flex flex-col gap-6" side="right">
+        <SheetHeader>
+          <SheetTitle>{project ? project.title : "Create project"}</SheetTitle>
+          <SheetDescription>
+            {project
+              ? "Update project metadata and status"
+              : "Fill the form to add a new initiative."}
+          </SheetDescription>
+        </SheetHeader>
         <Form {...form}>
-          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+          <form
+            className="flex flex-1 flex-col gap-4"
+            onSubmit={form.handleSubmit(onSubmit)}
+          >
             <FormField
               control={form.control}
-              name="name"
+              name="title"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Name</FormLabel>
+                  <FormLabel>Title</FormLabel>
                   <FormControl>
-                    <Input {...field} />
+                    <Input {...field} placeholder="Project name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -164,7 +164,7 @@ export function MemberDialog({
                 <FormItem>
                   <FormLabel>Slug</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="member-slug" />
+                    <Input {...field} placeholder="unique-slug" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -172,12 +172,12 @@ export function MemberDialog({
             />
             <FormField
               control={form.control}
-              name="email"
+              name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <Input type="email" {...field} />
+                    <Textarea {...field} placeholder="Short summary" rows={4} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -192,11 +192,11 @@ export function MemberDialog({
                   <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue />
+                        <SelectValue placeholder="Select status" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {memberStatus.map((status) => (
+                      {projectStatus.map((status) => (
                         <SelectItem key={status} value={status}>
                           {status}
                         </SelectItem>
@@ -209,54 +209,38 @@ export function MemberDialog({
             />
             <FormField
               control={form.control}
-              name="role"
+              name="owner"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
+                  <FormLabel>Owner</FormLabel>
                   <FormControl>
-                    <Input {...field} placeholder="Product Designer" />
+                    <Input {...field} placeholder="Owner name" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="bio"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bio</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      {...field}
-                      placeholder="Quick introduction"
-                      rows={3}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <DialogFooter className="flex items-center justify-between gap-2 sm:flex-row">
-              {member ? (
+            <div className="mt-auto flex items-center justify-between">
+              {project ? (
                 <Button
                   disabled={isPending}
                   onClick={onDelete}
                   type="button"
                   variant="destructive"
                 >
-                  Remove
+                  Delete
                 </Button>
               ) : (
                 <span />
               )}
               <Button disabled={isPending} type="submit">
-                {member ? "Save changes" : "Invite"}
+                {project ? "Save changes" : "Create"}
               </Button>
-            </DialogFooter>
+            </div>
           </form>
         </Form>
-      </DialogContent>
-    </Dialog>
+        <SheetFooter />
+      </SheetContent>
+    </Sheet>
   );
 }

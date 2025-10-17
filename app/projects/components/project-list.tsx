@@ -3,12 +3,11 @@
 import { ChevronRight, Plus, Search } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import * as React from "react";
-import { useOptimistic } from "react";
+import { useId, useOptimistic, useState } from "react";
 import { Badge } from "@/app/components/ui/badge";
 import { Button } from "@/app/components/ui/button";
 import { Input } from "@/app/components/ui/input";
-import { ProjectSheet } from "@/app/projects/components/ProjectSheet";
+import { ProjectSheet } from "@/app/projects/components/project-sheet";
 import { formatDate } from "@/lib/format";
 import type { CursorPaginationResult } from "@/lib/pagination";
 import type { Project } from "@/lib/schema";
@@ -31,13 +30,13 @@ function buildQuery(
   if (base.sort) {
     params.set("sort", base.sort);
   }
-  Object.entries(overrides).forEach(([key, value]) => {
+  for (const [key, value] of Object.entries(overrides)) {
     if (value) {
       params.set(key, value);
     } else {
       params.delete(key);
     }
-  });
+  }
   const query = params.toString();
   return query ? `?${query}` : "";
 }
@@ -49,10 +48,10 @@ export function ProjectList({
   sort,
 }: ProjectListProps) {
   const router = useRouter();
-  const [sheetOpen, setSheetOpen] = React.useState(false);
-  const [selected, setSelected] = React.useState<Project | null>(null);
-  const [sortValue, setSortValue] = React.useState(sort ?? "createdAt");
-  const sortSelectId = React.useId();
+  const [sheetOpen, setSheetOpen] = useState(false);
+  const [selected, setSelected] = useState<Project | null>(null);
+  const [sortValue, setSortValue] = useState(sort ?? "createdAt");
+  const sortSelectId = useId();
   const [optimisticProjects, applyOptimistic] = useOptimistic(
     projects,
     (state, action: { type: "delete"; id: number }) => {

@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { TicketDetailForm } from "@/app/tickets/components/TicketDetailForm";
+import { TicketDetailForm } from "@/app/tickets/components/ticket-detail-form";
 import { formatDate } from "@/lib/format";
 import {
   getMemberOptions,

@@ -10,6 +10,9 @@ import {
   tickets,
 } from "@/lib/schema";
 
+const DEFAULT_SEED_COUNT = 120;
+const SLUG_SUFFIX_LENGTH = 6;
+
 async function reset() {
   await db.delete(tickets);
   await db.delete(projects);
@@ -28,11 +31,11 @@ function createSlug(...parts: string[]) {
     .replace(/(^-|-$)+/g, "");
 }
 
-async function seedProjects(count = 120) {
+async function seedProjects(count = DEFAULT_SEED_COUNT) {
   const data = Array.from({ length: count }, () => {
     const title = faker.company.catchPhrase();
     return {
-      slug: createSlug(title, faker.string.alphanumeric(6)),
+      slug: createSlug(title, faker.string.alphanumeric(SLUG_SUFFIX_LENGTH)),
       title,
       description: faker.company.buzzPhrase(),
       status: randomEnumValue(projectStatus) as ProjectStatus,
@@ -42,10 +45,13 @@ async function seedProjects(count = 120) {
   await db.insert(projects).values(data);
 }
 
-async function seedMembers(count = 120) {
+async function seedMembers(count = DEFAULT_SEED_COUNT) {
   const data = Array.from({ length: count }, () => {
     const name = faker.person.fullName();
-    const slug = createSlug(name, faker.string.alphanumeric(6));
+    const slug = createSlug(
+      name,
+      faker.string.alphanumeric(SLUG_SUFFIX_LENGTH)
+    );
     return {
       slug,
       name,
@@ -58,12 +64,15 @@ async function seedMembers(count = 120) {
   await db.insert(members).values(data);
 }
 
-async function seedTickets(count = 120) {
+async function seedTickets(count = DEFAULT_SEED_COUNT) {
   const projectIds = await db.select({ id: projects.id }).from(projects);
   const memberNames = await db.select({ name: members.name }).from(members);
   const data = Array.from({ length: count }, () => {
     const title = faker.hacker.phrase();
-    const slug = createSlug(title, faker.string.alphanumeric(6));
+    const slug = createSlug(
+      title,
+      faker.string.alphanumeric(SLUG_SUFFIX_LENGTH)
+    );
     return {
       slug,
       title,
