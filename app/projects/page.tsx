@@ -1,6 +1,6 @@
 import { ProjectList } from "@/app/projects/components/project-list";
 import { parsePaginationParams } from "@/lib/pagination";
-import { getProjectList, getProjectVersionCount } from "@/lib/queries";
+import { getProjectList } from "@/lib/queries";
 
 type ProjectsPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
@@ -29,19 +29,10 @@ export default async function ProjectsPage({
     showDeleted,
   });
 
-  const versionCounts = await Promise.all(
-    data.items.map((project) => getProjectVersionCount(project.id))
-  );
-
-  const projectsWithVersions = data.items.map((project, index) => ({
-    ...project,
-    versionCount: versionCounts[index],
-  }));
-
   return (
     <ProjectList
       pageInfo={data.pageInfo}
-      projects={projectsWithVersions}
+      projects={data.items}
       search={search}
       showDeleted={showDeleted}
       sort={sortParam}

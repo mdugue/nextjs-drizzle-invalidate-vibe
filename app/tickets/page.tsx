@@ -4,7 +4,6 @@ import {
   getMemberOptions,
   getProjectOptions,
   getTicketList,
-  getTicketVersionCount,
 } from "@/lib/queries";
 
 type TicketsPageProps = {

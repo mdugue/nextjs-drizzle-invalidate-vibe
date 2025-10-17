@@ -1,5 +1,17 @@
 import type { AnyColumn, SQL } from "drizzle-orm";
-import { and, asc, desc, eq, gt, isNull, like, lt, or } from "drizzle-orm";
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  getTableColumns,
+  gt,
+  isNull,
+  like,
+  lt,
+  or,
+  sql,
+} from "drizzle-orm";
 import { unstable_cache } from "next/cache";
 import { db } from "@/lib/db";
 import {
@@ -10,12 +22,14 @@ import {
 import {
   type Member,
   members,
+  membersHistory,
   type Project,
   projects,
+  projectsHistory,
   type Ticket,
   tickets,
+  ticketsHistory,
 } from "@/lib/schema";
-import { getVersionCount } from "@/lib/versioning";
 
 export const PROJECT_LIST_TAG = "projects:list";
 export const PROJECT_DETAIL_TAG = (id: number) => `projects:detail:${id}`;
@@ -26,6 +40,10 @@ export const TICKET_VERSION_TAG = (id: number) => `tickets:versions:${id}`;
 export const MEMBER_LIST_TAG = "members:list";
 export const MEMBER_DETAIL_TAG = (id: number) => `members:detail:${id}`;
 export const MEMBER_VERSION_TAG = (id: number) => `members:versions:${id}`;
+
+export type ProjectWithVersionCount = Project & { versionCount: number };
+export type TicketWithVersionCount = Ticket & { versionCount: number };
+export type MemberWithVersionCount = Member & { versionCount: number };
 
 type SortOption = "createdAt" | "title";
 
@@ -209,12 +227,17 @@ const projectFetcher = (params: ListParams) => {
     idColumn: projects.id,
   });
 
-  const query = where.length
-    ? db
-        .select()
-        .from(projects)
-        .where(and(...where))
-    : db.select().from(projects);
+  const query = db
+    .select({
+      ...getTableColumns(projects),
+      versionCount: sql<number>`COALESCE(MAX(${projectsHistory.versionNumber}), 0)`,
+    })
+    .from(projects)
+    .leftJoin(projectsHistory, eq(projects.id, projectsHistory.entityId))
+    .groupBy(projects.id)
+    .$dynamic();
+
+  const queryWithWhere = where.length > 0 ? query.where(and(...where)) : query;
 
   const orderBy = resolveOrderBy({
     direction,
@@ -224,12 +247,12 @@ const projectFetcher = (params: ListParams) => {
     idColumn: projects.id,
   });
 
-  return query.orderBy(...orderBy).limit(limit);
+  return queryWithWhere.orderBy(...orderBy).limit(limit);
 };
 
 const projectList = unstable_cache(
   async (params: ListParams) => {
-    const result = await cursorPaginate<Project, string>({
+    const result = await cursorPaginate<ProjectWithVersionCount, string>({
       cursor: params.cursor,
       direction: params.direction,
       limit: params.limit ?? DEFAULT_LIST_LIMIT,
@@ -304,12 +327,17 @@ const ticketFetcher = (
     idColumn: tickets.id,
   });
 
-  const query = where.length
-    ? db
-        .select()
-        .from(tickets)
-        .where(and(...where))
-    : db.select().from(tickets);
+  const query = db
+    .select({
+      ...getTableColumns(tickets),
+      versionCount: sql<number>`COALESCE(MAX(${ticketsHistory.versionNumber}), 0)`,
+    })
+    .from(tickets)
+    .leftJoin(ticketsHistory, eq(tickets.id, ticketsHistory.entityId))
+    .groupBy(tickets.id)
+    .$dynamic();
+
+  const queryWithWhere = where.length > 0 ? query.where(and(...where)) : query;
 
   const orderBy = resolveOrderBy({
     direction,
@@ -319,12 +347,12 @@ const ticketFetcher = (
     idColumn: tickets.id,
   });
 
-  return query.orderBy(...orderBy).limit(limit);
+  return queryWithWhere.orderBy(...orderBy).limit(limit);
 };
 
 const ticketList = unstable_cache(
   async (params: ListParams & { projectId?: number }) => {
-    const result = await cursorPaginate<Ticket, string>({
+    const result = await cursorPaginate<TicketWithVersionCount, string>({
       cursor: params.cursor,
       direction: params.direction,
       limit: params.limit ?? DEFAULT_LIST_LIMIT,
@@ -390,12 +418,17 @@ const memberFetcher = (params: ListParams) => {
     idColumn: members.id,
   });
 
-  const query = where.length
-    ? db
-        .select()
-        .from(members)
-        .where(and(...where))
-    : db.select().from(members);
+  const query = db
+    .select({
+      ...getTableColumns(members),
+      versionCount: sql<number>`COALESCE(MAX(${membersHistory.versionNumber}), 0)`,
+    })
+    .from(members)
+    .leftJoin(membersHistory, eq(members.id, membersHistory.entityId))
+    .groupBy(members.id)
+    .$dynamic();
+
+  const queryWithWhere = where.length > 0 ? query.where(and(...where)) : query;
 
   const orderBy = resolveOrderBy({
     direction,
@@ -405,12 +438,12 @@ const memberFetcher = (params: ListParams) => {
     idColumn: members.id,
   });
 
-  return query.orderBy(...orderBy).limit(limit);
+  return queryWithWhere.orderBy(...orderBy).limit(limit);
 };
 
 const memberList = unstable_cache(
   async (params: ListParams) => {
-    const result = await cursorPaginate<Member, string>({
+    const result = await cursorPaginate<MemberWithVersionCount, string>({
       cursor: params.cursor,
       direction: params.direction,
       limit: params.limit ?? DEFAULT_LIST_LIMIT,
@@ -443,18 +476,6 @@ export async function getMemberDetail(id: number) {
     { tags: [MEMBER_DETAIL_TAG(id)] }
   );
   return detail();
-}
-
-export function getProjectVersionCount(id: number): Promise<number> {
-  return getVersionCount("project", id);
-}
-
-export function getTicketVersionCount(id: number): Promise<number> {
-  return getVersionCount("ticket", id);
-}
-
-export function getMemberVersionCount(id: number): Promise<number> {
-  return getVersionCount("member", id);
 }
 
 const projectOptionsCache = unstable_cache(
