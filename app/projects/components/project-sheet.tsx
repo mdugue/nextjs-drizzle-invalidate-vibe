@@ -61,7 +61,6 @@ export function ProjectSheet({
       title: "",
       description: "",
       status: "planned",
-      owner: "",
     },
     values: project
       ? {
@@ -69,7 +68,7 @@ export function ProjectSheet({
           title: project.title,
           description: project.description ?? "",
           status: project.status,
-          owner: project.owner ?? "",
+          owner: project.owner ?? undefined,
         }
       : undefined,
   });
@@ -81,7 +80,6 @@ export function ProjectSheet({
         title: "",
         description: "",
         status: "planned",
-        owner: "",
       });
     }
   }, [open, form]);
@@ -90,19 +88,25 @@ export function ProjectSheet({
 
   const onSubmit = (values: ProjectFormValues) => {
     startTransition(async () => {
-      try {
-        if (project) {
-          await updateProject(project.id, values);
-          toast.success("Project updated");
-        } else {
-          await createProject(values);
-          toast.success("Project created");
+      const result = project
+        ? await updateProject(project.id, values)
+        : await createProject(values);
+
+      if (!result.success) {
+        // Map errors to form fields
+        for (const [field, message] of Object.entries(result.errors)) {
+          if (field === "_form") {
+            toast.error(message);
+          } else {
+            form.setError(field as keyof ProjectFormValues, { message });
+          }
         }
-        onOpenChange(false);
-        router.refresh();
-      } catch (error) {
-        toast.error((error as Error).message ?? "Failed to save project");
+        return;
       }
+
+      toast.success(project ? "Project updated" : "Project created");
+      onOpenChange(false);
+      router.refresh();
     });
   };
 
@@ -111,15 +115,17 @@ export function ProjectSheet({
       return;
     }
     startTransition(async () => {
-      try {
-        await deleteProject(project.id);
-        toast.success("Project deleted");
-        onDeleted?.(project.id);
-        onOpenChange(false);
-        router.refresh();
-      } catch (error) {
-        toast.error((error as Error).message ?? "Failed to delete project");
+      const result = await deleteProject(project.id);
+
+      if (!result.success) {
+        toast.error(result.errors._form ?? "Failed to delete project");
+        return;
       }
+
+      toast.success("Project deleted");
+      onDeleted?.(project.id);
+      onOpenChange(false);
+      router.refresh();
     });
   };
 

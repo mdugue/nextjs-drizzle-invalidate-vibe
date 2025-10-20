@@ -1,5 +1,5 @@
 import { relations } from "drizzle-orm";
-import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 export const projectStatus = [
   "planned",
@@ -63,65 +63,118 @@ const memberFields = {
   role: text("role"),
 };
 
-export const projects = sqliteTable("projects", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ...projectFields,
-  slug: text("slug").notNull().unique(),
-  status: text("status", { enum: projectStatus }).notNull().default("planned"),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  ...timestamps,
-});
+export const projects = sqliteTable(
+  "projects",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ...projectFields,
+    slug: text("slug").notNull().unique(),
+    status: text("status", { enum: projectStatus })
+      .notNull()
+      .default("planned"),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("projects_deleted_at_idx").on(table.deletedAt),
+    index("projects_created_at_idx").on(table.createdAt),
+    index("projects_title_idx").on(table.title),
+  ]
+);
 
-export const tickets = sqliteTable("tickets", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ...ticketFields,
-  slug: text("slug").notNull().unique(),
-  status: text("status", { enum: ticketStatus }).notNull().default("todo"),
-  projectId: integer("project_id").references(() => projects.id, {
-    onDelete: "set null",
-  }),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  ...timestamps,
-});
+export const tickets = sqliteTable(
+  "tickets",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ...ticketFields,
+    slug: text("slug").notNull().unique(),
+    status: text("status", { enum: ticketStatus }).notNull().default("todo"),
+    projectId: integer("project_id").references(() => projects.id, {
+      onDelete: "set null",
+    }),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    ...timestamps,
+  },
+  (table) => [
+    index("tickets_deleted_at_idx").on(table.deletedAt),
+    index("tickets_created_at_idx").on(table.createdAt),
+    index("tickets_title_idx").on(table.title),
+  ]
+);
 
-export const members = sqliteTable("members", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ...memberFields,
-  slug: text("slug").notNull().unique(),
-  status: text("status", { enum: memberStatus }).notNull().default("invited"),
-  deletedAt: integer("deleted_at", { mode: "timestamp" }),
-  ...timestamps,
-});
+export const members = sqliteTable(
+  "members",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ...memberFields,
+    slug: text("slug").notNull().unique(),
+    status: text("status", { enum: memberStatus }).notNull().default("invited"),
+    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    ...timestamps,
+  },
+  (table) => ({
+    deletedAtIdx: index("members_deleted_at_idx").on(table.deletedAt),
+    createdAtIdx: index("members_created_at_idx").on(table.createdAt),
+    nameIdx: index("members_name_idx").on(table.name),
+  })
+);
 
-export const projectsHistory = sqliteTable("projects_history", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ...versionFields,
-  entityId: integer("entity_id")
-    .notNull()
-    .references(() => projects.id, { onDelete: "cascade" }),
-  ...projectFields,
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
+export const projectsHistory = sqliteTable(
+  "projects_history",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ...versionFields,
+    entityId: integer("entity_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    ...projectFields,
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("projects_history_entity_version_idx").on(
+      table.entityId,
+      table.versionNumber
+    ),
+  ]
+);
 
-export const ticketsHistory = sqliteTable("tickets_history", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ...versionFields,
-  entityId: integer("entity_id")
-    .notNull()
-    .references(() => tickets.id, { onDelete: "cascade" }),
-  ...ticketFields,
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
+export const ticketsHistory = sqliteTable(
+  "tickets_history",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ...versionFields,
+    entityId: integer("entity_id")
+      .notNull()
+      .references(() => tickets.id, { onDelete: "cascade" }),
+    ...ticketFields,
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("tickets_history_entity_version_idx").on(
+      table.entityId,
+      table.versionNumber
+    ),
+  ]
+);
 
-export const membersHistory = sqliteTable("members_history", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  ...versionFields,
-  entityId: integer("entity_id")
-    .notNull()
-    .references(() => members.id, { onDelete: "cascade" }),
-  ...memberFields,
-  createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
-});
+export const membersHistory = sqliteTable(
+  "members_history",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    ...versionFields,
+    entityId: integer("entity_id")
+      .notNull()
+      .references(() => members.id, { onDelete: "cascade" }),
+    ...memberFields,
+    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+  },
+  (table) => [
+    index("members_history_entity_version_idx").on(
+      table.entityId,
+      table.versionNumber
+    ),
+  ]
+);
 
 export const projectRelations = relations(projects, ({ many }) => ({
   tickets: many(tickets),

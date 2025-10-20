@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "84a7c992-0b50-45c4-b275-8aa53421cd19",
-  "prevId": "d3ec8e36-29a2-4b2a-8ba9-acff5f287216",
+  "id": "691f23d4-cddc-41ec-94c2-216d3484fe9a",
+  "prevId": "84a7c992-0b50-45c4-b275-8aa53421cd19",
   "tables": {
     "members": {
       "name": "members",
@@ -70,7 +70,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -78,7 +78,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         }
       },
       "indexes": {
@@ -86,6 +86,21 @@
           "name": "members_slug_unique",
           "columns": ["slug"],
           "isUnique": true
+        },
+        "members_deleted_at_idx": {
+          "name": "members_deleted_at_idx",
+          "columns": ["deleted_at"],
+          "isUnique": false
+        },
+        "members_created_at_idx": {
+          "name": "members_created_at_idx",
+          "columns": ["created_at"],
+          "isUnique": false
+        },
+        "members_name_idx": {
+          "name": "members_name_idx",
+          "columns": ["name"],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -123,7 +138,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         },
         "slug": {
           "name": "slug",
@@ -175,7 +190,13 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "members_history_entity_version_idx": {
+          "name": "members_history_entity_version_idx",
+          "columns": ["entity_id", "version_number"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "members_history_entity_id_members_id_fk": {
           "name": "members_history_entity_id_members_id_fk",
@@ -250,7 +271,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -258,7 +279,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         }
       },
       "indexes": {
@@ -266,6 +287,21 @@
           "name": "projects_slug_unique",
           "columns": ["slug"],
           "isUnique": true
+        },
+        "projects_deleted_at_idx": {
+          "name": "projects_deleted_at_idx",
+          "columns": ["deleted_at"],
+          "isUnique": false
+        },
+        "projects_created_at_idx": {
+          "name": "projects_created_at_idx",
+          "columns": ["created_at"],
+          "isUnique": false
+        },
+        "projects_title_idx": {
+          "name": "projects_title_idx",
+          "columns": ["title"],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -303,7 +339,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         },
         "slug": {
           "name": "slug",
@@ -348,7 +384,13 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "projects_history_entity_version_idx": {
+          "name": "projects_history_entity_version_idx",
+          "columns": ["entity_id", "version_number"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "projects_history_entity_id_projects_id_fk": {
           "name": "projects_history_entity_id_projects_id_fk",
@@ -430,7 +472,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -438,7 +480,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         }
       },
       "indexes": {
@@ -446,6 +488,21 @@
           "name": "tickets_slug_unique",
           "columns": ["slug"],
           "isUnique": true
+        },
+        "tickets_deleted_at_idx": {
+          "name": "tickets_deleted_at_idx",
+          "columns": ["deleted_at"],
+          "isUnique": false
+        },
+        "tickets_created_at_idx": {
+          "name": "tickets_created_at_idx",
+          "columns": ["created_at"],
+          "isUnique": false
+        },
+        "tickets_title_idx": {
+          "name": "tickets_title_idx",
+          "columns": ["title"],
+          "isUnique": false
         }
       },
       "foreignKeys": {
@@ -493,7 +550,7 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false,
-          "default": "'\"2025-10-17T13:09:15.172Z\"'"
+          "default": "'\"2025-10-20T07:57:38.940Z\"'"
         },
         "slug": {
           "name": "slug",
@@ -545,7 +602,13 @@
           "autoincrement": false
         }
       },
-      "indexes": {},
+      "indexes": {
+        "tickets_history_entity_version_idx": {
+          "name": "tickets_history_entity_version_idx",
+          "columns": ["entity_id", "version_number"],
+          "isUnique": false
+        }
+      },
       "foreignKeys": {
         "tickets_history_entity_id_tickets_id_fk": {
           "name": "tickets_history_entity_id_tickets_id_fk",

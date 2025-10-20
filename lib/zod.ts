@@ -19,7 +19,7 @@ export const projectFormSchema = z.object({
   title: z.string().min(MIN_TEXT_LENGTH),
   description: z.string().optional(),
   status: z.enum(projectStatus),
-  owner: z.string().min(MIN_TEXT_LENGTH),
+  owner: z.string().min(MIN_TEXT_LENGTH).optional(),
 });
 
 const projectIdField = z.preprocess((value) => {

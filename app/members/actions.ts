@@ -2,6 +2,8 @@
 
 import { eq, max } from "drizzle-orm";
 import { revalidateTag } from "next/cache";
+import { ZodError } from "zod";
+import type { ActionResult } from "@/lib/action-types";
 import { db } from "@/lib/db";
 import {
   MEMBER_DETAIL_TAG,
@@ -16,23 +18,61 @@ import {
 } from "@/lib/versioning";
 import { type MemberFormValues, memberFormSchema } from "@/lib/zod";
 
-export async function createMember(values: MemberFormValues) {
-  const validated = memberFormSchema.parse(values);
-  await db.insert(members).values(validated);
-  revalidateTag(MEMBER_LIST_TAG);
+export async function createMember(
+  values: MemberFormValues
+): Promise<ActionResult> {
+  try {
+    const validated = memberFormSchema.parse(values);
+    await db.insert(members).values(validated);
+    revalidateTag(MEMBER_LIST_TAG);
+    return { success: true, data: undefined };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of error.issues) {
+        const path = issue.path.join(".");
+        fieldErrors[path] = issue.message;
+      }
+      return {
+        success: false,
+        errors: fieldErrors,
+      };
+    }
+    if (error instanceof Error && error.message.includes("UNIQUE constraint")) {
+      const isEmailConstraint = error.message.includes("email");
+      return {
+        success: false,
+        errors: {
+          [isEmailConstraint ? "email" : "slug"]:
+            `This ${isEmailConstraint ? "email" : "slug"} is already taken`,
+        },
+      };
+    }
+    return {
+      success: false,
+      errors: { _form: "Failed to create member" },
+    };
+  }
 }
 
-export async function updateMember(id: number, values: MemberFormValues) {
-  const validated = memberFormSchema.parse(values);
+export async function updateMember(
+  id: number,
+  values: MemberFormValues
+): Promise<ActionResult> {
+  try {
+    const validated = memberFormSchema.parse(values);
 
-  await db.transaction(async (tx) => {
-    const [current] = await tx
-      .select()
-      .from(members)
-      .where(eq(members.id, id))
-      .limit(1);
+    await db.transaction(async (tx) => {
+      const [current] = await tx
+        .select()
+        .from(members)
+        .where(eq(members.id, id))
+        .limit(1);
 
-    if (current) {
+      if (!current) {
+        throw new Error(`Member with id ${id} not found`);
+      }
+
       const versionNumber =
         (await tx
           .select({ max: max(membersHistory.versionNumber) })
@@ -53,25 +93,64 @@ export async function updateMember(id: number, values: MemberFormValues) {
         role: current.role ?? null,
         createdAt: current.createdAt,
       });
+
+      await tx.update(members).set(validated).where(eq(members.id, id));
+    });
+
+    revalidateTag(MEMBER_LIST_TAG);
+    revalidateTag(MEMBER_DETAIL_TAG(id));
+    revalidateTag(MEMBER_VERSION_TAG(id));
+    return { success: true, data: undefined };
+  } catch (error) {
+    if (error instanceof ZodError) {
+      const fieldErrors: Record<string, string> = {};
+      for (const issue of error.issues) {
+        const path = issue.path.join(".");
+        fieldErrors[path] = issue.message;
+      }
+      return {
+        success: false,
+        errors: fieldErrors,
+      };
     }
-
-    await tx.update(members).set(validated).where(eq(members.id, id));
-  });
-
-  revalidateTag(MEMBER_LIST_TAG);
-  revalidateTag(MEMBER_DETAIL_TAG(id));
-  revalidateTag(MEMBER_VERSION_TAG(id));
+    if (error instanceof Error) {
+      if (error.message.includes("UNIQUE constraint")) {
+        const isEmailConstraint = error.message.includes("email");
+        return {
+          success: false,
+          errors: {
+            [isEmailConstraint ? "email" : "slug"]:
+              `This ${isEmailConstraint ? "email" : "slug"} is already taken`,
+          },
+        };
+      }
+      if (error.message.includes("not found")) {
+        return {
+          success: false,
+          errors: { _form: "Member not found" },
+        };
+      }
+    }
+    return {
+      success: false,
+      errors: { _form: "Failed to update member" },
+    };
+  }
 }
 
-export async function deleteMember(id: number) {
-  await db.transaction(async (tx) => {
-    const [current] = await tx
-      .select()
-      .from(members)
-      .where(eq(members.id, id))
-      .limit(1);
+export async function deleteMember(id: number): Promise<ActionResult> {
+  try {
+    await db.transaction(async (tx) => {
+      const [current] = await tx
+        .select()
+        .from(members)
+        .where(eq(members.id, id))
+        .limit(1);
 
-    if (current) {
+      if (!current) {
+        throw new Error(`Member with id ${id} not found`);
+      }
+
       const versionNumber =
         (await tx
           .select({ max: max(membersHistory.versionNumber) })
@@ -92,24 +171,47 @@ export async function deleteMember(id: number) {
         role: current.role ?? null,
         createdAt: current.createdAt,
       });
+
+      await tx
+        .update(members)
+        .set({ deletedAt: new Date() })
+        .where(eq(members.id, id));
+    });
+
+    revalidateTag(MEMBER_LIST_TAG);
+    revalidateTag(MEMBER_DETAIL_TAG(id));
+    revalidateTag(MEMBER_VERSION_TAG(id));
+    return { success: true, data: undefined };
+  } catch (error) {
+    if (error instanceof Error && error.message.includes("not found")) {
+      return {
+        success: false,
+        errors: { _form: "Member not found" },
+      };
     }
-
-    await tx
-      .update(members)
-      .set({ deletedAt: new Date() })
-      .where(eq(members.id, id));
-  });
-
-  revalidateTag(MEMBER_LIST_TAG);
-  revalidateTag(MEMBER_DETAIL_TAG(id));
-  revalidateTag(MEMBER_VERSION_TAG(id));
+    return {
+      success: false,
+      errors: { _form: "Failed to delete member" },
+    };
+  }
 }
 
-export async function restoreMember(id: number, versionNumber: number) {
-  await restoreMemberVersion(id, versionNumber);
-  revalidateTag(MEMBER_LIST_TAG);
-  revalidateTag(MEMBER_DETAIL_TAG(id));
-  revalidateTag(MEMBER_VERSION_TAG(id));
+export async function restoreMember(
+  id: number,
+  versionNumber: number
+): Promise<ActionResult> {
+  try {
+    await restoreMemberVersion(id, versionNumber);
+    revalidateTag(MEMBER_LIST_TAG);
+    revalidateTag(MEMBER_DETAIL_TAG(id));
+    revalidateTag(MEMBER_VERSION_TAG(id));
+    return { success: true, data: undefined };
+  } catch {
+    return {
+      success: false,
+      errors: { _form: "Failed to restore member version" },
+    };
+  }
 }
 
 export async function getMemberVersionHistory(id: number) {
