@@ -24,11 +24,12 @@
   },
   "overrides": [
     {
-      "includes": ["*/*test*"],
+      "includes": ["*/*test.*", "*/*spec.*"],
       "linter": {
         "rules": {
           "style": { "noMagicNumbers": "off" },
-          "suspicious": { "noEmptyBlockStatements": "off" }
+          "suspicious": { "noEmptyBlockStatements": "off" },
+          "performance": { "useTopLevelRegex": "off" }
         }
       }
     },

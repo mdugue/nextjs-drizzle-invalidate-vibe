@@ -1,0 +1,4 @@
+[test]
+# Exclude Playwright E2E tests from Bun test runner
+# Note: `bun test` command explicitly targets tests/ directory
+

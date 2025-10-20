@@ -14,7 +14,11 @@ out
 .env*
 !.env.example
 
+# Testing
+coverage
+playwright-report/
+test-results/
+
 # Misc
 .DS_Store
-coverage
 tsconfig.tsbuildinfo

@@ -13,7 +13,7 @@ Pulseboard is a production-style Next.js App Router demo showcasing modern clien
   - Members → modal dialog detail
 - **Drizzle ORM + SQLite** schema, migrations, and Faker-powered seeding script (~120 rows per entity).
 - **Tailwind CSS + shadcn/ui** component primitives, accessible dialogs/sheets, and Suspense skeletons.
-- **Quality tooling** with Biome linting, strict TypeScript, Bun tests, and GitHub Actions CI.
+- **Quality tooling** with Biome linting, strict TypeScript, Bun integration tests, Playwright E2E tests, and GitHub Actions CI.
 
 ## 🧱 Tech Stack
 
@@ -24,6 +24,7 @@ Pulseboard is a production-style Next.js App Router demo showcasing modern clien
 - Bun runtime & test runner
 - Zod + react-hook-form
 - Biome formatter/linter
+- Playwright (E2E testing)
 
 ## 🚀 Getting Started
 
@@ -61,17 +62,22 @@ Key patterns:
 
 ## 🧪 Tooling & Scripts
 
-| Command               | Description                    |
-| --------------------- | ------------------------------ |
-| `bun run dev`         | Start Next.js dev server       |
-| `bun run build`       | Create production build        |
-| `bun run start`       | Start production server        |
-| `bun run db:generate` | Generate Drizzle SQL migration |
-| `bun run db:migrate`  | Apply migrations               |
-| `bun run db:seed`     | Seed SQLite database           |
-| `bun run lint`        | Biome lint/format check        |
-| `bun run typecheck`   | TypeScript strict check        |
-| `bun run test`        | Bun test suite                 |
+| Command                  | Description                    |
+| ------------------------ | ------------------------------ |
+| `bun run dev`            | Start Next.js dev server       |
+| `bun run build`          | Create production build        |
+| `bun run start`          | Start production server        |
+| `bun run db:generate`    | Generate Drizzle SQL migration |
+| `bun run db:migrate`     | Apply migrations               |
+| `bun run db:seed`        | Seed SQLite database           |
+| `bun run lint`           | Biome lint/format check        |
+| `bun run typecheck`      | TypeScript strict check        |
+| `bun run test`           | Bun integration test suite     |
+| `bun run test:e2e`       | Playwright E2E tests           |
+| `bun run test:e2e:ui`    | E2E tests with Playwright UI   |
+| `bun run test:e2e:debug` | E2E tests in debug mode        |
+
+> **Note:** E2E tests generate an HTML report without auto-opening it. View with `npx playwright show-report`.
 
 ## 🧰 Extending
 
