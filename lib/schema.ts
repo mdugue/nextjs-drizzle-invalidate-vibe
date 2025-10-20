@@ -20,59 +20,53 @@ export type TicketStatus = (typeof ticketStatus)[number];
 export type MemberStatus = (typeof memberStatus)[number];
 
 const timestamps = {
-  createdAt: integer("created_at", { mode: "timestamp" })
-    .notNull()
-    .default(new Date()),
-  updatedAt: integer("updated_at", { mode: "timestamp" })
+  createdAt: integer({ mode: "timestamp" }).notNull().default(new Date()),
+  updatedAt: integer({ mode: "timestamp" })
     .notNull()
     .default(new Date())
     .$onUpdate(() => new Date()),
 };
 
 const versionFields = {
-  entityId: integer("entity_id").notNull(),
-  versionNumber: integer("version_number").notNull(),
-  changedAt: integer("changed_at", { mode: "timestamp" })
-    .notNull()
-    .default(new Date()),
+  entityId: integer().notNull(),
+  versionNumber: integer().notNull(),
+  changedAt: integer({ mode: "timestamp" }).notNull().default(new Date()),
 };
 
 const projectFields = {
-  slug: text("slug").notNull(),
-  title: text("title").notNull(),
-  description: text("description"),
-  status: text("status", { enum: projectStatus }).notNull(),
-  owner: text("owner"),
+  slug: text().notNull(),
+  title: text().notNull(),
+  description: text(),
+  status: text({ enum: projectStatus }).notNull(),
+  owner: text(),
 };
 
 const ticketFields = {
-  slug: text("slug").notNull(),
-  title: text("title").notNull(),
-  summary: text("summary"),
-  status: text("status", { enum: ticketStatus }).notNull(),
-  projectId: integer("project_id"),
-  assignee: text("assignee"),
+  slug: text().notNull(),
+  title: text().notNull(),
+  summary: text(),
+  status: text({ enum: ticketStatus }).notNull(),
+  projectId: integer(),
+  assignee: text(),
 };
 
 const memberFields = {
-  slug: text("slug").notNull(),
-  name: text("name").notNull(),
-  email: text("email").notNull(),
-  status: text("status", { enum: memberStatus }).notNull(),
-  bio: text("bio"),
-  role: text("role"),
+  slug: text().notNull(),
+  name: text().notNull(),
+  email: text().notNull(),
+  status: text({ enum: memberStatus }).notNull(),
+  bio: text(),
+  role: text(),
 };
 
 export const projects = sqliteTable(
   "projects",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey({ autoIncrement: true }),
     ...projectFields,
-    slug: text("slug").notNull().unique(),
-    status: text("status", { enum: projectStatus })
-      .notNull()
-      .default("planned"),
-    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    slug: text().notNull().unique(),
+    status: text({ enum: projectStatus }).notNull().default("planned"),
+    deletedAt: integer({ mode: "timestamp" }),
     ...timestamps,
   },
   (table) => [
@@ -85,14 +79,14 @@ export const projects = sqliteTable(
 export const tickets = sqliteTable(
   "tickets",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey({ autoIncrement: true }),
     ...ticketFields,
-    slug: text("slug").notNull().unique(),
-    status: text("status", { enum: ticketStatus }).notNull().default("todo"),
-    projectId: integer("project_id").references(() => projects.id, {
+    slug: text().notNull().unique(),
+    status: text({ enum: ticketStatus }).notNull().default("todo"),
+    projectId: integer().references(() => projects.id, {
       onDelete: "set null",
     }),
-    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    deletedAt: integer({ mode: "timestamp" }),
     ...timestamps,
   },
   (table) => [
@@ -105,11 +99,11 @@ export const tickets = sqliteTable(
 export const members = sqliteTable(
   "members",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey({ autoIncrement: true }),
     ...memberFields,
-    slug: text("slug").notNull().unique(),
-    status: text("status", { enum: memberStatus }).notNull().default("invited"),
-    deletedAt: integer("deleted_at", { mode: "timestamp" }),
+    slug: text().notNull().unique(),
+    status: text({ enum: memberStatus }).notNull().default("invited"),
+    deletedAt: integer({ mode: "timestamp" }),
     ...timestamps,
   },
   (table) => ({
@@ -122,13 +116,13 @@ export const members = sqliteTable(
 export const projectsHistory = sqliteTable(
   "projects_history",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey({ autoIncrement: true }),
     ...versionFields,
-    entityId: integer("entity_id")
+    entityId: integer()
       .notNull()
       .references(() => projects.id, { onDelete: "cascade" }),
     ...projectFields,
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer({ mode: "timestamp" }).notNull(),
   },
   (table) => [
     index("projects_history_entity_version_idx").on(
@@ -141,13 +135,13 @@ export const projectsHistory = sqliteTable(
 export const ticketsHistory = sqliteTable(
   "tickets_history",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey({ autoIncrement: true }),
     ...versionFields,
-    entityId: integer("entity_id")
+    entityId: integer()
       .notNull()
       .references(() => tickets.id, { onDelete: "cascade" }),
     ...ticketFields,
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer({ mode: "timestamp" }).notNull(),
   },
   (table) => [
     index("tickets_history_entity_version_idx").on(
@@ -160,13 +154,13 @@ export const ticketsHistory = sqliteTable(
 export const membersHistory = sqliteTable(
   "members_history",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: integer().primaryKey({ autoIncrement: true }),
     ...versionFields,
-    entityId: integer("entity_id")
+    entityId: integer()
       .notNull()
       .references(() => members.id, { onDelete: "cascade" }),
     ...memberFields,
-    createdAt: integer("created_at", { mode: "timestamp" }).notNull(),
+    createdAt: integer({ mode: "timestamp" }).notNull(),
   },
   (table) => [
     index("members_history_entity_version_idx").on(

@@ -23,6 +23,15 @@
     }
   },
   "overrides": [
+    {
+      "includes": ["*/*test*"],
+      "linter": {
+        "rules": {
+          "style": { "noMagicNumbers": "off" },
+          "suspicious": { "noEmptyBlockStatements": "off" }
+        }
+      }
+    },
     // relax rules for shadcn components until they comply
     {
       "includes": ["app/components/ui/**/*.tsx"],

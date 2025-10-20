@@ -7,4 +7,4 @@ const url = "file:./.data/dev.sqlite";
 mkdirSync(dataDir, { recursive: true });
 export const client = new Database(url);
 
-export const db = drizzle({ client });
+export const db = drizzle({ client, casing: "snake_case" });
